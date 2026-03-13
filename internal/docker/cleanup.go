@@ -40,7 +40,7 @@ func (m *Manager) StopAllContainers(ctx context.Context) error {
 
 	for _, container := range containers {
 		if container.State == "running" {
-			if err := m.client.ContainerStop(ctx, container.ID, nil); err != nil {
+			if err := m.client.ContainerStop(ctx, container.ID, container.StopOptions{}); err != nil {
 				return fmt.Errorf("failed to stop container %s: %w", container.Names[0], err)
 			}
 		}
@@ -82,19 +82,19 @@ func (m *Manager) RemoveAllContainers(ctx context.Context, force bool) error {
 }
 
 // ListLumineVolumes lists all volumes with "lumine_" prefix
-func (m *Manager) ListLumineVolumes(ctx context.Context) ([]*types.Volume, error) {
+func (m *Manager) ListLumineVolumes(ctx context.Context) ([]*volume.Volume, error) {
 	filterArgs := filters.NewArgs()
 	filterArgs.Add("name", "lumine_")
 	
-	volumeList, err := m.client.VolumeList(ctx, filters.Args{})
+	volumeList, err := m.client.VolumeList(ctx, volume.ListOptions{Filters: filterArgs})
 	if err != nil {
 		return nil, err
 	}
 
-	var lumineVolumes []*types.Volume
-	for _, volume := range volumeList.Volumes {
-		if strings.HasPrefix(volume.Name, "lumine_") {
-			lumineVolumes = append(lumineVolumes, volume)
+	var lumineVolumes []*volume.Volume
+	for _, vol := range volumeList.Volumes {
+		if strings.HasPrefix(vol.Name, "lumine_") {
+			lumineVolumes = append(lumineVolumes, vol)
 		}
 	}
 
@@ -185,7 +185,7 @@ func (m *Manager) GetContainerLogs(ctx context.Context, containerName string, ta
 	defer logs.Close()
 
 	buf := new(strings.Builder)
-	_, err = buf.ReadFrom(logs)
+	_, err = io.Copy(buf, logs)
 	if err != nil {
 		return "", err
 	}
