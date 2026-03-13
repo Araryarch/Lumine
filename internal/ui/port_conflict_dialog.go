@@ -8,93 +8,131 @@ import (
 )
 
 func (m model) renderPortConflictDialog() string {
-	var s strings.Builder
-
-	// Create overlay
 	overlayWidth := 65
-	overlayHeight := 18
-
-	// Center the overlay
-	leftPadding := (m.width - overlayWidth) / 2
-	topPadding := (m.height - overlayHeight) / 2
-
-	// Add top padding
-	for i := 0; i < topPadding; i++ {
-		s.WriteString("\n")
-	}
-
-	// Overlay style
-	overlayStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(warningColor).
-		Padding(1, 2).
-		Width(overlayWidth).
-		Height(overlayHeight).
-		Background(bgColor)
 
 	var content strings.Builder
 
-	// Header
-	header := lipgloss.NewStyle().
+	titleBox := lipgloss.NewStyle().
+		Foreground(bgColor).
+		Background(warningColor).
 		Bold(true).
-		Foreground(warningColor).
-		Render("WARNING: Port Conflict Detected")
-	content.WriteString(header + "\n\n")
+		Padding(1, 3).
+		Render(" 󰀦  Port Conflict Detected  ")
 
-	// Conflict info
+	content.WriteString(titleBox + "\n\n")
+
+	divider := lipgloss.NewStyle().
+		Foreground(surface1).
+		Render(strings.Repeat("─", overlayWidth-6))
+	content.WriteString(divider + "\n\n")
+
 	if m.portConflict != nil {
-		info := fmt.Sprintf("Port %d is already in use by another service.", m.portConflict.Port)
-		content.WriteString(lipgloss.NewStyle().Foreground(fgColor).Render(info) + "\n\n")
+		infoBox := lipgloss.NewStyle().
+			Foreground(fgColor).
+			Background(surface0).
+			Padding(1, 2).
+			Width(overlayWidth - 12).
+			Align(lipgloss.Center).
+			Render(fmt.Sprintf(" Port %d is already in use by another service ", m.portConflict.Port))
+		content.WriteString(infoBox + "\n\n")
 
-		// Alternative ports
 		content.WriteString(lipgloss.NewStyle().
 			Bold(true).
 			Foreground(infoColor).
 			Render("Available alternative ports:") + "\n\n")
 
 		for i, altPort := range m.portConflict.Alternatives {
-			var line string
-			cursor := "  "
+			var line strings.Builder
 			if m.portConflictCursor == i {
-				cursor = "> "
-			}
-
-			portText := fmt.Sprintf("%sPort %d", cursor, altPort)
-			if m.portConflictCursor == i {
-				line = selectedItemStyle.Width(overlayWidth - 6).Render(portText)
+				line.WriteString(lipgloss.NewStyle().
+					Foreground(primaryColor).
+					Bold(true).
+					Render(" "))
 			} else {
-				line = normalItemStyle.Render(portText)
+				line.WriteString("  ")
 			}
 
-			content.WriteString(line + "\n")
+			portBadge := lipgloss.NewStyle().
+				Foreground(successColor).
+				Background(surface0).
+				Padding(0, 1).
+				Bold(true).
+				Render(fmt.Sprintf(" :%d ", altPort))
+			line.WriteString(portBadge)
+
+			lineStr := line.String()
+			if m.portConflictCursor == i {
+				lineStr = lipgloss.NewStyle().
+					Background(surface0).
+					Width(overlayWidth-8).
+					Padding(0, 1).
+					Render(lineStr)
+			} else {
+				lineStr = lipgloss.NewStyle().
+					Width(overlayWidth-8).
+					Padding(0, 1).
+					Render(lineStr)
+			}
+
+			content.WriteString(lineStr + "\n")
 		}
 
 		content.WriteString("\n")
 		content.WriteString(lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Render("Or enter custom port: "))
-		
+
 		if m.customPortInput != "" {
-			content.WriteString(lipgloss.NewStyle().
+			inputBox := lipgloss.NewStyle().
 				Foreground(infoColor).
-				Render(m.customPortInput + "█"))
+				Background(surface0).
+				Padding(0, 1).
+				Render(m.customPortInput + "󰍟")
+			content.WriteString(inputBox)
 		}
 	}
 
-	// Help
-	content.WriteString("\n\n")
-	helpText := lipgloss.NewStyle().
-		Foreground(infoColor).
-		Render("↑/↓: Navigate  Enter: Use port  Esc: Cancel  Type: Custom port")
-	content.WriteString(helpText)
+	content.WriteString("\n\n" + divider + "\n")
 
-	overlay := overlayStyle.Render(content.String())
+	helpBox := lipgloss.NewStyle().
+		Background(surface0).
+		Padding(1, 2).
+		Width(overlayWidth - 8).
+		Align(lipgloss.Center)
 
-	// Add left padding
-	lines := strings.Split(overlay, "\n")
-	for _, line := range lines {
-		s.WriteString(strings.Repeat(" ", leftPadding) + line + "\n")
+	helpItems := []string{
+		lipgloss.NewStyle().Foreground(bgColor).
+			Background(primaryColor).Padding(0, 2).Bold(true).Render(" ↑↓ ") +
+			lipgloss.NewStyle().Foreground(mutedColor).Render(" navigate"),
+		lipgloss.NewStyle().Foreground(bgColor).
+			Background(successColor).Padding(0, 2).Bold(true).Render(" enter ") +
+			lipgloss.NewStyle().Foreground(mutedColor).Render(" use port"),
+		lipgloss.NewStyle().Foreground(bgColor).
+			Background(errorColor).Padding(0, 2).Bold(true).Render(" esc ") +
+			lipgloss.NewStyle().Foreground(mutedColor).Render(" cancel"),
 	}
 
-	return s.String()
+	helpText := strings.Join(helpItems, "  "+lipgloss.NewStyle().Foreground(surface1).Render("│")+"  ")
+	content.WriteString(helpBox.Render(helpText))
+
+	modalBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(warningColor).
+		Background(bgColor).
+		Padding(0, 0).
+		Width(overlayWidth)
+
+	modal := modalBox.Render(content.String())
+
+	modalWithPosition := lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		modal,
+		lipgloss.WithWhitespaceChars(" "),
+		lipgloss.WithWhitespaceForeground(surface0),
+	)
+
+	return modalWithPosition
 }

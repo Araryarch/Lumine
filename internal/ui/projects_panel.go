@@ -10,49 +10,66 @@ import (
 func (m model) renderProjectsPanel() string {
 	var s strings.Builder
 
-	panelWidth := ((m.width - 24) / 2) - 2
+	panelWidth := ((m.width - 26) / 2) - 2
 	panelHeight := m.height - 5
 
+	borderStyle := lipgloss.NormalBorder()
+	if m.activePanel == mainPanel {
+		borderStyle = lipgloss.DoubleBorder()
+	}
+
+	borderColorStyle := borderColor
+	if m.activePanel == mainPanel {
+		borderColorStyle = primaryColor
+	}
+
 	style := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
+		Border(borderStyle).
+		BorderForeground(borderColorStyle).
+		Background(bgColor).
 		Padding(1, 2).
 		Width(panelWidth).
 		Height(panelHeight)
-	
-	if m.activePanel == mainPanel {
-		style = style.BorderForeground(primaryColor).Border(lipgloss.ThickBorder())
-	}
 
-	header := lipgloss.NewStyle().
+	titleStyle := lipgloss.NewStyle().
 		Foreground(primaryColor).
 		Bold(true).
-		Underline(true).
-		Render("Projects")
-	s.WriteString(header + "\n\n")
+		Padding(0, 1).
+		Background(surface0).
+		Width(panelWidth - 4).
+		Render("󰉋  Projects")
+
+	s.WriteString(titleStyle + "\n\n")
 
 	if len(m.config.Projects) == 0 {
+		emptyIcon := lipgloss.NewStyle().
+			Foreground(mutedColor).
+			Render("󰈙")
+
+		emptyTitle := lipgloss.NewStyle().
+			Foreground(subtleColor).
+			Bold(true).
+			Render("No projects yet")
+
+		emptyDesc := lipgloss.NewStyle().
+			Foreground(mutedColor).
+			Render("Press 'n' to create a new project")
+
 		emptyBox := lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(borderColor).
+			BorderForeground(surface1).
 			Padding(2, 4).
 			Width(panelWidth - 8).
-			Align(lipgloss.Center)
-		
-		var empty strings.Builder
-		empty.WriteString(lipgloss.NewStyle().
-			Foreground(mutedColor).
-			Italic(true).
-			Render("No projects yet") + "\n\n")
-		empty.WriteString(lipgloss.NewStyle().
-			Foreground(infoColor).
-			Render("Press ") +
-			lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render("'n'") +
-			lipgloss.NewStyle().Foreground(infoColor).Render(" to create one"))
-		
-		s.WriteString(emptyBox.Render(empty.String()))
+			Align(lipgloss.Center).
+			Render(lipgloss.JoinVertical(lipgloss.Center,
+				emptyIcon,
+				"",
+				emptyTitle,
+				emptyDesc,
+			))
+
+		s.WriteString(emptyBox)
 	} else {
-		// Calculate visible items with scroll
 		maxVisibleItems := panelHeight - 5
 		if maxVisibleItems < 3 {
 			maxVisibleItems = 3
@@ -62,7 +79,7 @@ func (m model) renderProjectsPanel() string {
 		endIdx := len(m.config.Projects)
 		showScrollTop := false
 		showScrollBottom := false
-		
+
 		if len(m.config.Projects) > maxVisibleItems {
 			startIdx = m.cursor - (maxVisibleItems / 2)
 			if startIdx < 0 {
@@ -76,78 +93,90 @@ func (m model) renderProjectsPanel() string {
 					startIdx = 0
 				}
 			}
-			
+
 			showScrollTop = startIdx > 0
 			showScrollBottom = endIdx < len(m.config.Projects)
 		}
 
-		// Scroll indicator top
 		if showScrollTop {
-			s.WriteString(lipgloss.NewStyle().
+			scrollIndicator := lipgloss.NewStyle().
 				Foreground(mutedColor).
 				Italic(true).
-				Render(fmt.Sprintf("  ↑ %d more above", startIdx)) + "\n")
+				Render(fmt.Sprintf("  ↑ %d more", startIdx))
+			s.WriteString(scrollIndicator + "\n")
 		}
 
 		for i := startIdx; i < endIdx; i++ {
 			project := m.config.Projects[i]
 			var line strings.Builder
 
-			cursor := "  "
+			icon := getIconForProject(project.Type)
 			if m.cursor == i {
-				cursor = lipgloss.NewStyle().
+				line.WriteString(lipgloss.NewStyle().
 					Foreground(primaryColor).
 					Bold(true).
-					Render("▶ ")
+					Render(" "))
+			} else {
+				line.WriteString(lipgloss.NewStyle().
+					Foreground(mutedColor).
+					Render("  "))
 			}
 
-			// Status
-			statusIcon := "●"
-			statusStyle := stoppedStatusStyle
+			statusIcon := "󰀊"
+			statusStyle := mutedColor
 			if project.Status == "running" {
-				statusStyle = runningStatusStyle
+				statusIcon = "󰀄"
+				statusStyle = successColor
 			}
 
-			// Project type badge
 			badge := getProjectBadge(project.Type).Render(strings.ToUpper(project.Type))
-
-			line.WriteString(cursor)
 			line.WriteString(badge + " ")
-			line.WriteString(lipgloss.NewStyle().Bold(true).Render(project.Name))
-			line.WriteString(fmt.Sprintf(" %s %s", statusStyle.Render(statusIcon), statusStyle.Render(project.Status)))
 
-			// Domain
+			line.WriteString(lipgloss.NewStyle().Foreground(infoColor).Render(icon + " "))
+			line.WriteString(lipgloss.NewStyle().Bold(true).Foreground(fgColor).Render(project.Name))
+
+			statusBadge := lipgloss.NewStyle().
+				Foreground(bgColor).
+				Background(statusStyle).
+				Padding(0, 1).
+				Render(" " + statusIcon + " ")
+			line.WriteString(" " + statusBadge)
+
 			if project.Domain != "" {
-				domainInfo := lipgloss.NewStyle().
+				domainBadge := lipgloss.NewStyle().
 					Foreground(infoColor).
-					Render(fmt.Sprintf(" → %s", project.Domain))
-				line.WriteString(domainInfo)
+					Background(surface0).
+					Padding(0, 1).
+					Render("󰀟 " + project.Domain)
+				line.WriteString(" " + domainBadge)
 			}
 
 			lineStr := line.String()
 			if m.cursor == i {
 				lineStr = lipgloss.NewStyle().
-					Background(surfaceColor).
-					Width(panelWidth - 4).
+					Background(surface0).
+					Width(panelWidth-4).
 					Padding(0, 1).
 					Render(lineStr)
 			} else {
-				lineStr = normalItemStyle.Render(lineStr)
+				lineStr = lipgloss.NewStyle().
+					Foreground(fgColor).
+					Padding(0, 1).
+					Render(lineStr)
 			}
 
 			s.WriteString(lineStr + "\n")
 		}
 
-		// Scroll indicator bottom
 		if showScrollBottom {
-			s.WriteString(lipgloss.NewStyle().
+			scrollIndicator := lipgloss.NewStyle().
 				Foreground(mutedColor).
 				Italic(true).
-				Render(fmt.Sprintf("  ↓ %d more below", len(m.config.Projects)-endIdx)) + "\n")
+				Render(fmt.Sprintf("  ↓ %d more", len(m.config.Projects)-endIdx))
+			s.WriteString(scrollIndicator + "\n")
 		}
 	}
 
-	// Add spacing
 	currentLines := strings.Count(s.String(), "\n")
 	for i := currentLines; i < panelHeight-2; i++ {
 		s.WriteString("\n")
@@ -159,41 +188,51 @@ func (m model) renderProjectsPanel() string {
 func (m model) renderRuntimesPanel() string {
 	var s strings.Builder
 
-	panelWidth := ((m.width - 24) / 2) - 2
+	panelWidth := ((m.width - 26) / 2) - 2
 	panelHeight := m.height - 5
 
+	borderStyle := lipgloss.NormalBorder()
+	if m.activePanel == mainPanel {
+		borderStyle = lipgloss.DoubleBorder()
+	}
+
+	borderColorStyle := borderColor
+	if m.activePanel == mainPanel {
+		borderColorStyle = primaryColor
+	}
+
 	style := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
+		Border(borderStyle).
+		BorderForeground(borderColorStyle).
+		Background(bgColor).
 		Padding(1, 2).
 		Width(panelWidth).
 		Height(panelHeight)
-	
-	if m.activePanel == mainPanel {
-		style = style.BorderForeground(primaryColor).Border(lipgloss.ThickBorder())
-	}
 
-	header := lipgloss.NewStyle().
+	titleStyle := lipgloss.NewStyle().
 		Foreground(primaryColor).
 		Bold(true).
-		Underline(true).
-		Render("Runtimes")
-	s.WriteString(header + "\n\n")
+		Padding(0, 1).
+		Background(surface0).
+		Width(panelWidth - 4).
+		Render("󰌠  Runtimes")
+
+	s.WriteString(titleStyle + "\n\n")
 
 	runtimes := []struct {
 		name    string
 		version string
+		icon    string
 	}{
-		{"PHP", m.config.Runtimes.PHP},
-		{"Node.js", m.config.Runtimes.Node},
-		{"Python", m.config.Runtimes.Python},
-		{"Rust", m.config.Runtimes.Rust},
-		{"Bun", m.config.Runtimes.Bun},
-		{"Deno", m.config.Runtimes.Deno},
-		{"Go", m.config.Runtimes.Go},
+		{"PHP", m.config.Runtimes.PHP, "󰌞"},
+		{"Node.js", m.config.Runtimes.Node, "󰛦"},
+		{"Python", m.config.Runtimes.Python, "󰌠"},
+		{"Rust", m.config.Runtimes.Rust, "󱘘"},
+		{"Bun", m.config.Runtimes.Bun, "󰛦"},
+		{"Deno", m.config.Runtimes.Deno, "󰛦"},
+		{"Go", m.config.Runtimes.Go, "󰟓"},
 	}
 
-	// Calculate visible items with scroll
 	maxVisibleItems := panelHeight - 6
 	if maxVisibleItems < 3 {
 		maxVisibleItems = 3
@@ -203,7 +242,7 @@ func (m model) renderRuntimesPanel() string {
 	endIdx := len(runtimes)
 	showScrollTop := false
 	showScrollBottom := false
-	
+
 	if len(runtimes) > maxVisibleItems {
 		startIdx = m.cursor - (maxVisibleItems / 2)
 		if startIdx < 0 {
@@ -217,67 +256,79 @@ func (m model) renderRuntimesPanel() string {
 				startIdx = 0
 			}
 		}
-		
+
 		showScrollTop = startIdx > 0
 		showScrollBottom = endIdx < len(runtimes)
 	}
 
-	// Scroll indicator top
 	if showScrollTop {
-		s.WriteString(lipgloss.NewStyle().
+		scrollIndicator := lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Italic(true).
-			Render(fmt.Sprintf("  ↑ %d more above", startIdx)) + "\n")
+			Render(fmt.Sprintf("  ↑ %d more", startIdx))
+		s.WriteString(scrollIndicator + "\n")
 	}
 
 	for i := startIdx; i < endIdx; i++ {
 		rt := runtimes[i]
 		var line strings.Builder
 
-		cursor := "  "
 		if m.cursor == i {
-			cursor = lipgloss.NewStyle().
+			line.WriteString(lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Bold(true).
-				Render("> ")
+				Render(" "))
+		} else {
+			line.WriteString(lipgloss.NewStyle().
+				Foreground(mutedColor).
+				Render("  "))
 		}
 
-		line.WriteString(cursor)
-		line.WriteString(lipgloss.NewStyle().Bold(true).Render(rt.name))
-		line.WriteString(lipgloss.NewStyle().
-			Foreground(infoColor).
-			Render(fmt.Sprintf(" v%s", rt.version)))
+		line.WriteString(lipgloss.NewStyle().Foreground(infoColor).Render(rt.icon + " "))
+
+		line.WriteString(lipgloss.NewStyle().Bold(true).Foreground(fgColor).Render(rt.name))
+
+		versionBadge := lipgloss.NewStyle().
+			Foreground(successColor).
+			Background(surface0).
+			Padding(0, 1).
+			Render("v" + rt.version)
+		line.WriteString(" " + versionBadge)
 
 		lineStr := line.String()
 		if m.cursor == i {
 			lineStr = lipgloss.NewStyle().
-				Background(surfaceColor).
-				Width(panelWidth - 4).
+				Background(surface0).
+				Width(panelWidth-4).
 				Padding(0, 1).
 				Render(lineStr)
 		} else {
-			lineStr = normalItemStyle.Render(lineStr)
+			lineStr = lipgloss.NewStyle().
+				Foreground(fgColor).
+				Padding(0, 1).
+				Render(lineStr)
 		}
 
 		s.WriteString(lineStr + "\n")
 	}
 
-	// Scroll indicator bottom
 	if showScrollBottom {
-		s.WriteString(lipgloss.NewStyle().
+		scrollIndicator := lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Italic(true).
-			Render(fmt.Sprintf("  ↓ %d more below", len(runtimes)-endIdx)) + "\n")
+			Render(fmt.Sprintf("  ↓ %d more", len(runtimes)-endIdx))
+		s.WriteString(scrollIndicator + "\n")
 	}
 
 	s.WriteString("\n")
-	s.WriteString(lipgloss.NewStyle().
+
+	helpText := lipgloss.NewStyle().
 		Foreground(mutedColor).
 		Render("Press ") +
 		lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render("'v'") +
-		lipgloss.NewStyle().Foreground(mutedColor).Render(" to change version"))
+		lipgloss.NewStyle().Foreground(mutedColor).Render(" to change version")
+	s.WriteString(helpText)
 
-	// Add spacing
 	currentLines := strings.Count(s.String(), "\n")
 	for i := currentLines; i < panelHeight-2; i++ {
 		s.WriteString("\n")
@@ -325,6 +376,10 @@ func getProjectBadge(projectType string) lipgloss.Style {
 			Padding(0, 1).
 			Bold(true)
 	default:
-		return defaultBadge
+		return lipgloss.NewStyle().
+			Foreground(fgColor).
+			Background(surface1).
+			Padding(0, 1).
+			Bold(true)
 	}
 }

@@ -17,68 +17,60 @@ const (
 )
 
 func (m model) renderCleanupDialog() string {
-	// Modal dimensions
 	modalWidth := 75
 
 	var content strings.Builder
 
-	// Title with icon
-	titleStyle := lipgloss.NewStyle().
-		Foreground(errorColor).
+	titleBox := lipgloss.NewStyle().
+		Foreground(bgColor).
+		Background(errorColor).
 		Bold(true).
-		Align(lipgloss.Center).
-		Width(modalWidth - 4)
+		Padding(1, 3).
+		Render(" 󰀎  Cleanup Options  ")
 
-	title := titleStyle.Render("🗑️  Cleanup Options")
-	content.WriteString(title + "\n")
+	content.WriteString(titleBox + "\n\n")
 
-	// Divider
 	divider := lipgloss.NewStyle().
-		Foreground(borderColor).
-		Render(strings.Repeat("─", modalWidth-4))
+		Foreground(surface1).
+		Render(strings.Repeat("─", modalWidth-6))
 	content.WriteString(divider + "\n\n")
 
-	// Warning box
 	warningBox := lipgloss.NewStyle().
-		Foreground(warningColor).
-		Background(surfaceColor).
+		Foreground(bgColor).
+		Background(warningColor).
 		Padding(0, 2).
 		Align(lipgloss.Center).
-		Width(modalWidth - 8).
+		Width(modalWidth - 12).
 		Bold(true).
-		Render("⚠️  Select what to remove  ⚠️")
+		Render(" 󰀦  Select what to remove  ")
 	content.WriteString(warningBox + "\n\n")
 
-	// Options with better styling
 	options := []struct {
 		name        string
 		description string
 		icon        string
 		danger      bool
 	}{
-		{"Remove Container", "Stop and remove this container only", "📦", false},
-		{"Remove with Volume", "Remove container and its data volume", "💾", true},
-		{"Remove All Containers", "Remove all Lumine containers", "🗂️", true},
-		{"Nuclear Cleanup", "Remove EVERYTHING (containers, volumes, networks)", "💣", true},
+		{"Remove Container", "Stop and remove this container only", "󰡨", false},
+		{"Remove with Volume", "Remove container and its data volume", "󰉋", true},
+		{"Remove All Containers", "Remove all Lumine containers", "󰡨", true},
+		{"Nuclear Cleanup", "Remove EVERYTHING", "󰀎", true},
 	}
 
 	for i, opt := range options {
 		var line strings.Builder
 
-		// Selection indicator
 		if m.cleanupCursor == i {
 			line.WriteString(lipgloss.NewStyle().
-				Foreground(errorColor).
+				Foreground(primaryColor).
 				Bold(true).
-				Render("▶ "))
+				Render(" "))
 		} else {
 			line.WriteString("  ")
 		}
 
-		// Icon
 		line.WriteString(opt.icon + " ")
 
-		// Option name
 		nameStyle := lipgloss.NewStyle().
 			Foreground(fgColor).
 			Bold(true)
@@ -89,169 +81,159 @@ func (m model) renderCleanupDialog() string {
 
 		lineStr := line.String()
 
-		// Highlight selected
 		if m.cleanupCursor == i {
 			lineStr = lipgloss.NewStyle().
-				Background(lipgloss.Color("#313244")).
+				Background(surface0).
 				Foreground(fgColor).
-				Width(modalWidth - 6).
+				Width(modalWidth-8).
 				Padding(0, 1).
 				Bold(true).
 				Render(lineStr)
 		} else {
 			lineStr = lipgloss.NewStyle().
-				Width(modalWidth - 6).
+				Width(modalWidth-8).
 				Padding(0, 1).
 				Render(lineStr)
 		}
 
 		content.WriteString(lineStr + "\n")
 
-		// Description
 		descStyle := lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Italic(true).
-			Width(modalWidth - 10).
+			Width(modalWidth-14).
 			Padding(0, 0, 0, 4)
 		content.WriteString(descStyle.Render(opt.description) + "\n\n")
 	}
 
-	// Current selection info
 	if m.selectedService != nil {
 		content.WriteString("\n")
 		infoBox := lipgloss.NewStyle().
-			Foreground(infoColor).
-			Background(surfaceColor).
+			Foreground(bgColor).
+			Background(infoColor).
 			Padding(0, 2).
 			Align(lipgloss.Center).
-			Width(modalWidth - 8).
-			Render(fmt.Sprintf("Selected: %s", m.selectedService.Name))
+			Width(modalWidth - 12).
+			Render(fmt.Sprintf(" Selected: %s ", m.selectedService.Name))
 		content.WriteString(infoBox + "\n")
 	}
 
-	// Bottom divider
 	content.WriteString("\n" + divider + "\n")
 
-	// Help text with icons
+	helpBox := lipgloss.NewStyle().
+		Background(surface0).
+		Padding(1, 2).
+		Width(modalWidth - 8).
+		Align(lipgloss.Center)
+
 	helpItems := []string{
-		lipgloss.NewStyle().Foreground(infoColor).Render("↑↓") +
+		lipgloss.NewStyle().Foreground(bgColor).
+			Background(primaryColor).Padding(0, 2).Bold(true).Render(" ↑↓ ") +
 			lipgloss.NewStyle().Foreground(mutedColor).Render(" navigate"),
-		lipgloss.NewStyle().Foreground(errorColor).Render("enter") +
+		lipgloss.NewStyle().Foreground(bgColor).
+			Background(errorColor).Padding(0, 2).Bold(true).Render(" enter ") +
 			lipgloss.NewStyle().Foreground(mutedColor).Render(" confirm"),
-		lipgloss.NewStyle().Foreground(successColor).Render("esc") +
+		lipgloss.NewStyle().Foreground(bgColor).
+			Background(successColor).Padding(0, 2).Bold(true).Render(" esc ") +
 			lipgloss.NewStyle().Foreground(mutedColor).Render(" cancel"),
 	}
 
-	helpText := lipgloss.NewStyle().
-		Align(lipgloss.Center).
-		Width(modalWidth - 4).
-		Render(strings.Join(helpItems, "  •  "))
-	content.WriteString(helpText)
+	helpText := strings.Join(helpItems, "  "+lipgloss.NewStyle().Foreground(surface1).Render("│")+"  ")
+	content.WriteString(helpBox.Render(helpText))
 
-	// Modal box
 	modalBox := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(errorColor).
 		Background(bgColor).
-		Padding(2, 2).
+		Padding(0, 0).
 		Width(modalWidth)
 
 	modal := modalBox.Render(content.String())
 
-	// Center modal on screen with overlay
 	modalWithPosition := lipgloss.Place(
 		m.width,
 		m.height,
 		lipgloss.Center,
 		lipgloss.Center,
 		modal,
-		lipgloss.WithWhitespaceChars("░"),
-		lipgloss.WithWhitespaceForeground(lipgloss.Color("#45475a")),
+		lipgloss.WithWhitespaceChars(" "),
+		lipgloss.WithWhitespaceForeground(surface0),
 	)
 
 	return modalWithPosition
 }
 
 func (m model) renderConfirmDialog(message string) string {
-	// Modal dimensions
 	modalWidth := 65
 
 	var content strings.Builder
 
-	// Title with icon
-	titleStyle := lipgloss.NewStyle().
-		Foreground(errorColor).
+	titleBox := lipgloss.NewStyle().
+		Foreground(bgColor).
+		Background(warningColor).
 		Bold(true).
-		Align(lipgloss.Center).
-		Width(modalWidth - 4)
+		Padding(1, 3).
+		Render(" 󰀦  WARNING  ")
 
-	title := titleStyle.Render("⚠️  WARNING  ⚠️")
-	content.WriteString(title + "\n")
+	content.WriteString(titleBox + "\n\n")
 
-	// Divider
 	divider := lipgloss.NewStyle().
-		Foreground(borderColor).
-		Render(strings.Repeat("─", modalWidth-4))
+		Foreground(surface1).
+		Render(strings.Repeat("─", modalWidth-6))
 	content.WriteString(divider + "\n\n")
 
-	// Message box
 	messageBox := lipgloss.NewStyle().
 		Foreground(fgColor).
-		Background(surfaceColor).
+		Background(surface0).
 		Padding(1, 2).
 		Align(lipgloss.Center).
-		Width(modalWidth - 8).
-		Render(message)
+		Width(modalWidth - 12).
+		Render(" " + message + " ")
 	content.WriteString(messageBox + "\n\n")
 
-	// Confirmation prompt
 	promptStyle := lipgloss.NewStyle().
 		Foreground(warningColor).
 		Bold(true)
 	content.WriteString(promptStyle.Render("Type 'yes' to confirm:") + "\n\n")
 
-	// Input field with box
 	inputBox := lipgloss.NewStyle().
-		Foreground(infoColor).
-		Background(lipgloss.Color("#313244")).
+		Foreground(fgColor).
+		Background(surface0).
 		Padding(0, 2).
-		Width(modalWidth - 8).
+		Width(modalWidth - 12).
 		Align(lipgloss.Center).
-		Render(m.confirmInput + "█")
+		Render(m.confirmInput + "󰍟")
 	content.WriteString(inputBox + "\n\n")
 
-	// Bottom divider
 	content.WriteString(divider + "\n")
 
-	// Help text
-	helpText := lipgloss.NewStyle().
-		Foreground(mutedColor).
+	helpBox := lipgloss.NewStyle().
+		Background(surface0).
+		Padding(1, 2).
+		Width(modalWidth - 8).
 		Align(lipgloss.Center).
-		Width(modalWidth - 4).
+		Foreground(mutedColor).
 		Render("Type 'yes' and press enter to confirm  •  esc to cancel")
-	content.WriteString(helpText)
+	content.WriteString(helpBox)
 
-	// Modal box
 	modalBox := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(errorColor).
+		BorderForeground(warningColor).
 		Background(bgColor).
-		Padding(2, 2).
+		Padding(0, 0).
 		Width(modalWidth)
 
 	modal := modalBox.Render(content.String())
 
-	// Center modal on screen with overlay
 	modalWithPosition := lipgloss.Place(
 		m.width,
 		m.height,
 		lipgloss.Center,
 		lipgloss.Center,
 		modal,
-		lipgloss.WithWhitespaceChars("░"),
-		lipgloss.WithWhitespaceForeground(lipgloss.Color("#45475a")),
+		lipgloss.WithWhitespaceChars(" "),
+		lipgloss.WithWhitespaceForeground(surface0),
 	)
 
 	return modalWithPosition
 }
-

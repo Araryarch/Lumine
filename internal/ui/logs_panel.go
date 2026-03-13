@@ -10,36 +10,66 @@ import (
 func (m model) renderLogsPanel() string {
 	var s strings.Builder
 
-	panelWidth := ((m.width - 24) / 2) - 2
+	panelWidth := ((m.width - 26) / 2) - 2
 	panelHeight := m.height - 5
 
+	borderStyle := lipgloss.NormalBorder()
+	if m.activePanel == mainPanel {
+		borderStyle = lipgloss.DoubleBorder()
+	}
+
+	borderColorStyle := borderColor
+	if m.activePanel == mainPanel {
+		borderColorStyle = primaryColor
+	}
+
 	style := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
+		Border(borderStyle).
+		BorderForeground(borderColorStyle).
+		Background(bgColor).
 		Padding(1, 2).
 		Width(panelWidth).
 		Height(panelHeight)
-	
-	if m.activePanel == mainPanel {
-		style = style.BorderForeground(primaryColor).Border(lipgloss.ThickBorder())
-	}
 
-	header := lipgloss.NewStyle().
+	titleStyle := lipgloss.NewStyle().
 		Foreground(primaryColor).
 		Bold(true).
-		Underline(true).
-		Render("Logs")
-	s.WriteString(header + "\n\n")
-	
+		Padding(0, 1).
+		Background(surface0).
+		Width(panelWidth - 4).
+		Render("󰌱  Logs")
+
+	s.WriteString(titleStyle + "\n\n")
+
 	if len(m.logs) == 0 {
-		s.WriteString(lipgloss.NewStyle().
+		emptyIcon := lipgloss.NewStyle().
 			Foreground(mutedColor).
-			Italic(true).
-			Render("No logs yet...") + "\n")
-		s.WriteString("\n")
-		s.WriteString(subHeaderStyle.Render("Logs will appear here when you perform actions"))
+			Render("󰌱")
+
+		emptyTitle := lipgloss.NewStyle().
+			Foreground(subtleColor).
+			Bold(true).
+			Render("No logs yet")
+
+		emptyDesc := lipgloss.NewStyle().
+			Foreground(mutedColor).
+			Render("Logs will appear when you perform actions")
+
+		emptyBox := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(surface1).
+			Padding(2, 4).
+			Width(panelWidth - 8).
+			Align(lipgloss.Center).
+			Render(lipgloss.JoinVertical(lipgloss.Center,
+				emptyIcon,
+				"",
+				emptyTitle,
+				emptyDesc,
+			))
+
+		s.WriteString(emptyBox)
 	} else {
-		// Show logs with scrolling
 		maxLogs := panelHeight - 6
 		startIdx := len(m.logs) - maxLogs - m.logScrollOffset
 		if startIdx < 0 {
@@ -52,60 +82,54 @@ func (m model) renderLogsPanel() string {
 
 		for i := startIdx; i < endIdx; i++ {
 			log := m.logs[i]
-			
-			// Timestamp
+
 			timestamp := lipgloss.NewStyle().
 				Foreground(mutedColor).
 				Render(log.timestamp)
-			
-			// Level with color
+
 			var levelStyle lipgloss.Style
 			var levelIcon string
 			switch log.level {
 			case "success":
 				levelStyle = lipgloss.NewStyle().Foreground(successColor).Bold(true)
-				levelIcon = "✓"
+				levelIcon = "󰸞"
 			case "error":
 				levelStyle = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
-				levelIcon = "✗"
+				levelIcon = "󰚌"
 			case "warning":
 				levelStyle = lipgloss.NewStyle().Foreground(warningColor).Bold(true)
-				levelIcon = "⚠"
-			default: // info
+				levelIcon = "󰀦"
+			default:
 				levelStyle = lipgloss.NewStyle().Foreground(infoColor)
-				levelIcon = "ℹ"
+				levelIcon = "󰋽"
 			}
 			level := levelStyle.Render(levelIcon)
-			
-			// Service
+
 			service := lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Bold(true).
 				Render(log.service)
-			
-			// Message
+
 			message := lipgloss.NewStyle().
 				Foreground(fgColor).
 				Render(log.message)
-			
+
 			logLine := fmt.Sprintf("%s %s [%s] %s", timestamp, level, service, message)
-			
-			// Truncate if too long
+
 			if lipgloss.Width(logLine) > panelWidth-6 {
 				logLine = logLine[:panelWidth-9] + "..."
 			}
-			
+
 			s.WriteString(logLine + "\n")
 		}
-		
-		// Scroll indicator
+
 		if m.logScrollOffset > 0 {
 			s.WriteString("\n")
 			s.WriteString(lipgloss.NewStyle().
 				Foreground(infoColor).
 				Render(fmt.Sprintf("↑ Scrolled up (%d more logs below)", m.logScrollOffset)))
 		}
-		
+
 		if startIdx > 0 {
 			s.WriteString("\n")
 			s.WriteString(lipgloss.NewStyle().
@@ -114,7 +138,6 @@ func (m model) renderLogsPanel() string {
 		}
 	}
 
-	// Add spacing
 	currentLines := strings.Count(s.String(), "\n")
 	for i := currentLines; i < panelHeight-2; i++ {
 		s.WriteString("\n")
@@ -126,36 +149,66 @@ func (m model) renderLogsPanel() string {
 func (m model) renderBackgroundTasksPanel() string {
 	var s strings.Builder
 
-	panelWidth := ((m.width - 24) / 2) - 2
+	panelWidth := ((m.width - 26) / 2) - 2
 	panelHeight := m.height - 5
 
+	borderStyle := lipgloss.NormalBorder()
+	if m.activePanel == mainPanel {
+		borderStyle = lipgloss.DoubleBorder()
+	}
+
+	borderColorStyle := borderColor
+	if m.activePanel == mainPanel {
+		borderColorStyle = primaryColor
+	}
+
 	style := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
+		Border(borderStyle).
+		BorderForeground(borderColorStyle).
+		Background(bgColor).
 		Padding(1, 2).
 		Width(panelWidth).
 		Height(panelHeight)
-	
-	if m.activePanel == mainPanel {
-		style = style.BorderForeground(primaryColor).Border(lipgloss.ThickBorder())
-	}
 
-	header := lipgloss.NewStyle().
+	titleStyle := lipgloss.NewStyle().
 		Foreground(primaryColor).
 		Bold(true).
-		Underline(true).
-		Render("Background Tasks")
-	s.WriteString(header + "\n\n")
-	
+		Padding(0, 1).
+		Background(surface0).
+		Width(panelWidth - 4).
+		Render("󰘦  Background Tasks")
+
+	s.WriteString(titleStyle + "\n\n")
+
 	if len(m.backgroundTasks) == 0 {
-		s.WriteString(lipgloss.NewStyle().
+		emptyIcon := lipgloss.NewStyle().
 			Foreground(mutedColor).
-			Italic(true).
-			Render("No background tasks running...") + "\n")
-		s.WriteString("\n")
-		s.WriteString(subHeaderStyle.Render("Tasks will appear here when operations run"))
+			Render("󰘦")
+
+		emptyTitle := lipgloss.NewStyle().
+			Foreground(subtleColor).
+			Bold(true).
+			Render("No background tasks")
+
+		emptyDesc := lipgloss.NewStyle().
+			Foreground(mutedColor).
+			Render("Tasks appear when operations run")
+
+		emptyBox := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(surface1).
+			Padding(2, 4).
+			Width(panelWidth - 8).
+			Align(lipgloss.Center).
+			Render(lipgloss.JoinVertical(lipgloss.Center,
+				emptyIcon,
+				"",
+				emptyTitle,
+				emptyDesc,
+			))
+
+		s.WriteString(emptyBox)
 	} else {
-		// Show recent tasks (last 20)
 		startIdx := 0
 		if len(m.backgroundTasks) > 20 {
 			startIdx = len(m.backgroundTasks) - 20
@@ -163,8 +216,7 @@ func (m model) renderBackgroundTasksPanel() string {
 
 		for i := startIdx; i < len(m.backgroundTasks); i++ {
 			task := m.backgroundTasks[i]
-			
-			// Status icon
+
 			var statusStyle lipgloss.Style
 			var statusIcon string
 			switch task.status {
@@ -173,39 +225,36 @@ func (m model) renderBackgroundTasksPanel() string {
 				statusIcon = "⟳"
 			case "completed":
 				statusStyle = lipgloss.NewStyle().Foreground(successColor)
-				statusIcon = "✓"
+				statusIcon = "󰸞"
 			case "failed":
 				statusStyle = lipgloss.NewStyle().Foreground(errorColor)
-				statusIcon = "✗"
+				statusIcon = "󰚌"
 			default:
 				statusStyle = lipgloss.NewStyle().Foreground(mutedColor)
 				statusIcon = "○"
 			}
-			
+
 			status := statusStyle.Render(statusIcon)
-			
-			// Task name
-			name := lipgloss.NewStyle().
-				Bold(true).
-				Render(task.name)
-			
-			// Time
+
 			time := lipgloss.NewStyle().
 				Foreground(mutedColor).
 				Render(task.startTime)
-			
+
+			name := lipgloss.NewStyle().
+				Bold(true).
+				Foreground(fgColor).
+				Render(task.name)
+
 			taskLine := fmt.Sprintf("%s %s %s - %s", time, status, name, task.message)
-			
-			// Truncate if too long
+
 			if lipgloss.Width(taskLine) > panelWidth-6 {
 				taskLine = taskLine[:panelWidth-9] + "..."
 			}
-			
+
 			s.WriteString(taskLine + "\n")
 		}
 	}
 
-	// Add spacing
 	currentLines := strings.Count(s.String(), "\n")
 	for i := currentLines; i < panelHeight-2; i++ {
 		s.WriteString("\n")

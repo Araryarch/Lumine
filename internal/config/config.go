@@ -67,7 +67,14 @@ func InitConfig() error {
 		defaultConfig := Config{
 			Services: []Service{
 				{Name: "nginx", Type: "nginx", Version: "latest", Port: 80},
-				{Name: "mysql", Type: "mysql", Version: "8.0", Port: 3306, Env: map[string]string{"MYSQL_ROOT_PASSWORD": "root", "MYSQL_DATABASE": "lumine"}},
+				{Name: "mysql", Type: "mysql", Version: "8.0", Port: 3306, Env: map[string]string{
+					"MYSQL_ROOT_PASSWORD": "root",
+					"MYSQL_DATABASE":      "lumine",
+				}},
+				{Name: "phpmyadmin", Type: "phpmyadmin", Version: "latest", Port: 8080, Env: map[string]string{
+					"PMA_HOST": "mysql",
+					"PMA_PORT": "3306",
+				}},
 				{Name: "redis", Type: "redis", Version: "7.2", Port: 6379},
 			},
 			Projects: []Project{},

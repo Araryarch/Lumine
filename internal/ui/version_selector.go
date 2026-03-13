@@ -8,55 +8,42 @@ import (
 )
 
 func (m model) renderVersionSelector() string {
-	// Modal dimensions
 	modalWidth := 70
 	modalHeight := 22
 
 	var content strings.Builder
 
-	// Title with icon
-	titleStyle := lipgloss.NewStyle().
-		Foreground(secondaryColor).
+	titleBox := lipgloss.NewStyle().
+		Foreground(bgColor).
+		Background(secondaryColor).
 		Bold(true).
-		Align(lipgloss.Center).
-		Width(modalWidth - 4)
+		Padding(1, 3).
+		Render(" 󰌠  Select Version  ")
 
-	var title string
-	if m.selectedService != nil {
-		title = titleStyle.Render(fmt.Sprintf("🔧 Select Version for %s", m.selectedService.Name))
-	} else if m.selectedRuntimeType != "" {
-		title = titleStyle.Render(fmt.Sprintf("🔧 Select %s Version", strings.Title(m.selectedRuntimeType)))
-	} else {
-		title = titleStyle.Render("🔧 Select Version")
-	}
-	content.WriteString(title + "\n")
+	content.WriteString(titleBox + "\n\n")
 
-	// Divider
 	divider := lipgloss.NewStyle().
-		Foreground(borderColor).
-		Render(strings.Repeat("─", modalWidth-4))
+		Foreground(surface1).
+		Render(strings.Repeat("─", modalWidth-6))
 	content.WriteString(divider + "\n\n")
 
-	// Current version info
 	if m.selectedService != nil {
 		currentBox := lipgloss.NewStyle().
 			Foreground(infoColor).
-			Background(surfaceColor).
+			Background(surface0).
 			Padding(0, 2).
 			Align(lipgloss.Center).
-			Width(modalWidth - 8).
-			Render(fmt.Sprintf("Current: %s", m.selectedService.Version))
+			Width(modalWidth - 12).
+			Render(fmt.Sprintf(" %s ", m.selectedService.Name))
 		content.WriteString(currentBox + "\n\n")
 	}
 
-	// Subheader
 	subheader := lipgloss.NewStyle().
 		Foreground(mutedColor).
 		Bold(true).
 		Render("Available Versions:")
 	content.WriteString(subheader + "\n")
 
-	// Calculate visible items
 	maxVisibleItems := modalHeight - 12
 	if maxVisibleItems < 5 {
 		maxVisibleItems = 5
@@ -85,72 +72,68 @@ func (m model) renderVersionSelector() string {
 		showScrollBottom = endIdx < len(m.availableVersions)
 	}
 
-	// Scroll indicator top
 	if showScrollTop {
 		scrollTop := lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Italic(true).
 			Align(lipgloss.Center).
-			Width(modalWidth - 4).
+			Width(modalWidth - 8).
 			Render(fmt.Sprintf("↑ %d more above ↑", startIdx))
 		content.WriteString(scrollTop + "\n")
-	} else {
-		content.WriteString("\n")
 	}
 
-	// Version list with better styling
 	for i := startIdx; i < endIdx; i++ {
 		version := m.availableVersions[i]
 		var line strings.Builder
 
-		// Selection indicator
 		if i == m.versionCursor {
 			line.WriteString(lipgloss.NewStyle().
 				Foreground(secondaryColor).
 				Bold(true).
-				Render("▶ "))
+				Render(" "))
 		} else {
 			line.WriteString("  ")
 		}
 
-		// Version badge
 		versionBadge := lipgloss.NewStyle().
 			Foreground(successColor).
+			Background(surface0).
+			Padding(0, 1).
 			Bold(true).
-			Render("v" + version)
+			Render(" v" + version + " ")
 		line.WriteString(versionBadge)
 
-		// Tag for special versions
 		if strings.Contains(version, "latest") {
 			tag := lipgloss.NewStyle().
-				Foreground(warningColor).
-				Background(surfaceColor).
+				Foreground(bgColor).
+				Background(warningColor).
 				Padding(0, 1).
-				Render("LATEST")
+				Bold(true).
+				Render(" LATEST ")
 			line.WriteString(" " + tag)
 		} else if strings.Contains(version, "alpine") {
 			tag := lipgloss.NewStyle().
-				Foreground(infoColor).
-				Background(surfaceColor).
+				Foreground(bgColor).
+				Background(infoColor).
 				Padding(0, 1).
-				Render("ALPINE")
+				Bold(true).
+				Render(" ALPINE ")
 			line.WriteString(" " + tag)
 		}
 
 		lineStr := line.String()
 
-		// Highlight selected
 		if i == m.versionCursor {
 			lineStr = lipgloss.NewStyle().
-				Background(lipgloss.Color("#313244")).
+				Background(surface0).
 				Foreground(fgColor).
-				Width(modalWidth - 6).
+				Width(modalWidth-8).
 				Padding(0, 1).
 				Bold(true).
 				Render(lineStr)
 		} else {
 			lineStr = lipgloss.NewStyle().
-				Width(modalWidth - 6).
+				Width(modalWidth-8).
 				Padding(0, 1).
 				Render(lineStr)
 		}
@@ -158,67 +141,66 @@ func (m model) renderVersionSelector() string {
 		content.WriteString(lineStr + "\n")
 	}
 
-	// Scroll indicator bottom
 	if showScrollBottom {
 		scrollBottom := lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Italic(true).
 			Align(lipgloss.Center).
-			Width(modalWidth - 4).
+			Width(modalWidth - 8).
 			Render(fmt.Sprintf("↓ %d more below ↓", len(m.availableVersions)-endIdx))
 		content.WriteString(scrollBottom + "\n")
-	} else {
-		content.WriteString("\n")
 	}
 
-	// Counter
 	counter := lipgloss.NewStyle().
 		Foreground(mutedColor).
+		Background(surface0).
 		Align(lipgloss.Center).
-		Width(modalWidth - 4).
-		Render(fmt.Sprintf("[%d/%d]", m.versionCursor+1, len(m.availableVersions)))
-	content.WriteString(counter + "\n")
+		Padding(0, 1).
+		Width(modalWidth - 8).
+		Render(fmt.Sprintf(" [%d/%d]", m.versionCursor+1, len(m.availableVersions)))
+	content.WriteString("\n" + counter + "\n")
 
-	// Bottom divider
 	content.WriteString(divider + "\n")
 
-	// Help text with icons
+	helpBox := lipgloss.NewStyle().
+		Background(surface0).
+		Padding(1, 2).
+		Width(modalWidth - 8).
+		Align(lipgloss.Center)
+
 	helpItems := []string{
-		lipgloss.NewStyle().Foreground(infoColor).Render("↑↓") +
+		lipgloss.NewStyle().Foreground(bgColor).
+			Background(primaryColor).Padding(0, 2).Bold(true).Render(" ↑↓ ") +
 			lipgloss.NewStyle().Foreground(mutedColor).Render(" navigate"),
-		lipgloss.NewStyle().Foreground(successColor).Render("enter") +
+		lipgloss.NewStyle().Foreground(bgColor).
+			Background(successColor).Padding(0, 2).Bold(true).Render(" enter ") +
 			lipgloss.NewStyle().Foreground(mutedColor).Render(" select"),
-		lipgloss.NewStyle().Foreground(errorColor).Render("esc") +
+		lipgloss.NewStyle().Foreground(bgColor).
+			Background(errorColor).Padding(0, 2).Bold(true).Render(" esc ") +
 			lipgloss.NewStyle().Foreground(mutedColor).Render(" cancel"),
 	}
 
-	helpText := lipgloss.NewStyle().
-		Align(lipgloss.Center).
-		Width(modalWidth - 4).
-		Render(strings.Join(helpItems, "  •  "))
-	content.WriteString(helpText)
+	helpText := strings.Join(helpItems, "  "+lipgloss.NewStyle().Foreground(surface1).Render("│")+"  ")
+	content.WriteString(helpBox.Render(helpText))
 
-	// Modal box
 	modalBox := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(secondaryColor).
 		Background(bgColor).
-		Padding(2, 2).
+		Padding(0, 0).
 		Width(modalWidth)
 
 	modal := modalBox.Render(content.String())
 
-	// Center modal on screen with overlay
 	modalWithPosition := lipgloss.Place(
 		m.width,
 		m.height,
 		lipgloss.Center,
 		lipgloss.Center,
 		modal,
-		lipgloss.WithWhitespaceChars("░"),
-		lipgloss.WithWhitespaceForeground(lipgloss.Color("#45475a")),
+		lipgloss.WithWhitespaceChars(" "),
+		lipgloss.WithWhitespaceForeground(surface0),
 	)
 
 	return modalWithPosition
 }
-

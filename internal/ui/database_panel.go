@@ -10,26 +10,36 @@ import (
 func (m model) renderDatabasePanel() string {
 	var s strings.Builder
 
-	panelWidth := ((m.width - 24) / 2) - 2
+	panelWidth := ((m.width - 26) / 2) - 2
 	panelHeight := m.height - 5
 
+	borderStyle := lipgloss.NormalBorder()
+	if m.activePanel == mainPanel {
+		borderStyle = lipgloss.DoubleBorder()
+	}
+
+	borderColorStyle := borderColor
+	if m.activePanel == mainPanel {
+		borderColorStyle = primaryColor
+	}
+
 	style := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(borderColor).
+		Border(borderStyle).
+		BorderForeground(borderColorStyle).
+		Background(bgColor).
 		Padding(1, 2).
 		Width(panelWidth).
 		Height(panelHeight)
-	
-	if m.activePanel == mainPanel {
-		style = style.BorderForeground(primaryColor).Border(lipgloss.ThickBorder())
-	}
 
-	header := lipgloss.NewStyle().
+	titleStyle := lipgloss.NewStyle().
 		Foreground(primaryColor).
 		Bold(true).
-		Underline(true).
-		Render("Databases")
-	s.WriteString(header + "\n\n")
+		Padding(0, 1).
+		Background(surface0).
+		Width(panelWidth - 4).
+		Render("󱆟  Databases")
+
+	s.WriteString(titleStyle + "\n\n")
 
 	databases := []struct {
 		name     string
@@ -46,7 +56,6 @@ func (m model) renderDatabasePanel() string {
 		{"Elasticsearch", "elasticsearch", 9200, "stopped", ""},
 	}
 
-	// Calculate visible items with scroll
 	maxVisibleItems := panelHeight - 6
 	if maxVisibleItems < 3 {
 		maxVisibleItems = 3
@@ -56,7 +65,7 @@ func (m model) renderDatabasePanel() string {
 	endIdx := len(databases)
 	showScrollTop := false
 	showScrollBottom := false
-	
+
 	if len(databases) > maxVisibleItems {
 		startIdx = m.cursor - (maxVisibleItems / 2)
 		if startIdx < 0 {
@@ -70,82 +79,96 @@ func (m model) renderDatabasePanel() string {
 				startIdx = 0
 			}
 		}
-		
+
 		showScrollTop = startIdx > 0
 		showScrollBottom = endIdx < len(databases)
 	}
 
-	// Scroll indicator top
 	if showScrollTop {
-		s.WriteString(lipgloss.NewStyle().
+		scrollIndicator := lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Italic(true).
-			Render(fmt.Sprintf("  ↑ %d more above", startIdx)) + "\n")
+			Render(fmt.Sprintf("  ↑ %d more", startIdx))
+		s.WriteString(scrollIndicator + "\n")
 	}
 
 	for i := startIdx; i < endIdx; i++ {
 		db := databases[i]
 		var line strings.Builder
 
-		cursor := "  "
+		icon := getIconForService(db.type_)
 		if m.cursor == i {
-			cursor = lipgloss.NewStyle().
+			line.WriteString(lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Bold(true).
-				Render("▶ ")
+				Render(" "))
+		} else {
+			line.WriteString(lipgloss.NewStyle().
+				Foreground(mutedColor).
+				Render("  "))
 		}
 
-		// Status
-		statusIcon := "●"
-		statusStyle := stoppedStatusStyle
+		statusIcon := "󰀊"
+		statusStyle := mutedColor
 		if db.status == "running" {
-			statusStyle = runningStatusStyle
+			statusIcon = "󰀄"
+			statusStyle = successColor
 		}
 
-		// Database badge
 		badge := getServiceBadge(db.type_).Render(strings.ToUpper(db.type_))
-
-		line.WriteString(cursor)
 		line.WriteString(badge + " ")
-		line.WriteString(lipgloss.NewStyle().Bold(true).Render(db.name))
-		line.WriteString(fmt.Sprintf(" %s %s", statusStyle.Render(statusIcon), statusStyle.Render(db.status)))
 
-		// Port
-		portInfo := lipgloss.NewStyle().
+		line.WriteString(lipgloss.NewStyle().Foreground(infoColor).Render(icon + " "))
+		line.WriteString(lipgloss.NewStyle().Bold(true).Foreground(fgColor).Render(db.name))
+
+		statusBadge := lipgloss.NewStyle().
+			Foreground(bgColor).
+			Background(statusStyle).
+			Padding(0, 1).
+			Render(" " + statusIcon + " ")
+		line.WriteString(" " + statusBadge)
+
+		portBadge := lipgloss.NewStyle().
 			Foreground(warningColor).
-			Render(fmt.Sprintf(" :%d", db.port))
-		line.WriteString(portInfo)
+			Background(surface0).
+			Padding(0, 1).
+			Render(fmt.Sprintf(":%d", db.port))
+		line.WriteString(" " + portBadge)
 
 		lineStr := line.String()
 		if m.cursor == i {
 			lineStr = lipgloss.NewStyle().
-				Background(surfaceColor).
-				Width(panelWidth - 4).
+				Background(surface0).
+				Width(panelWidth-4).
 				Padding(0, 1).
 				Render(lineStr)
 		} else {
-			lineStr = normalItemStyle.Render(lineStr)
+			lineStr = lipgloss.NewStyle().
+				Foreground(fgColor).
+				Padding(0, 1).
+				Render(lineStr)
 		}
 
 		s.WriteString(lineStr + "\n")
 	}
 
-	// Scroll indicator bottom
 	if showScrollBottom {
-		s.WriteString(lipgloss.NewStyle().
+		scrollIndicator := lipgloss.NewStyle().
 			Foreground(mutedColor).
 			Italic(true).
-			Render(fmt.Sprintf("  ↓ %d more below", len(databases)-endIdx)) + "\n")
+			Render(fmt.Sprintf("  ↓ %d more", len(databases)-endIdx))
+		s.WriteString(scrollIndicator + "\n")
 	}
 
 	s.WriteString("\n")
-	s.WriteString(lipgloss.NewStyle().
+
+	helpText := lipgloss.NewStyle().
 		Foreground(mutedColor).
 		Render("Press ") +
 		lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render("'o'") +
-		lipgloss.NewStyle().Foreground(mutedColor).Render(" to open admin panel"))
+		lipgloss.NewStyle().Foreground(mutedColor).Render(" to open admin panel")
+	s.WriteString(helpText)
 
-	// Add spacing
 	currentLines := strings.Count(s.String(), "\n")
 	for i := currentLines; i < panelHeight-2; i++ {
 		s.WriteString("\n")
