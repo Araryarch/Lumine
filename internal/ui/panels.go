@@ -13,7 +13,7 @@ func (m model) renderSidebarFixed(width, height int) string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == sidebarPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	style := lipgloss.NewStyle().
@@ -33,18 +33,18 @@ func (m model) renderSidebarFixed(width, height int) string {
 		Bold(true).
 		Padding(0, 1).
 		MarginBottom(1).
-		Render("󰘤 Navigation") + "\n\n")
+		Render("NAVIGATION") + "\n\n")
 
 	menuItems := []struct {
 		name string
 		icon string
 	}{
-		{"Services", "󰘦"},
-		{"Projects", "󰉋"},
-		{"Databases", "󱆟"},
-		{"Runtimes", "󰌠"},
-		{"Logs", "󰌱"},
-		{"Tasks", "󰘦"},
+		{"Services", "[S]"},
+		{"Projects", "[P]"},
+		{"Databases", "[D]"},
+		{"Runtimes", "[R]"},
+		{"Logs", "[L]"},
+		{"Tasks", "[T]"},
 	}
 
 	for i, item := range menuItems {
@@ -54,7 +54,7 @@ func (m model) renderSidebarFixed(width, height int) string {
 			line.WriteString(lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Bold(true).
-				Render("  "))
+				Render("> "))
 			line.WriteString(item.icon + " ")
 			nameStyle := lipgloss.NewStyle().
 				Foreground(bgColor).
@@ -65,7 +65,7 @@ func (m model) renderSidebarFixed(width, height int) string {
 			line.WriteString(nameStyle)
 		} else {
 			line.WriteString(lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Render("   "))
 			line.WriteString(lipgloss.NewStyle().
 				Foreground(infoColor).
@@ -91,12 +91,12 @@ func (m model) renderSidebarFixed(width, height int) string {
 		name string
 		icon string
 	}{
-		{"New Project", "󰈙"},
-		{"Settings", "󰒓"},
+		{"New Project", "[+]"},
+		{"Settings", "[,]"},
 	}
 
 	s.WriteString(lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Bold(true).
 		Padding(0, 1).
 		Render("Shortcuts") + "\n\n")
@@ -109,7 +109,7 @@ func (m model) renderSidebarFixed(width, height int) string {
 			line.WriteString(lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Bold(true).
-				Render("  "))
+				Render("> "))
 			line.WriteString(item.icon + " ")
 			nameStyle := lipgloss.NewStyle().
 				Foreground(bgColor).
@@ -120,7 +120,7 @@ func (m model) renderSidebarFixed(width, height int) string {
 			line.WriteString(nameStyle)
 		} else {
 			line.WriteString(lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Render("   "))
 			line.WriteString(lipgloss.NewStyle().
 				Foreground(infoColor).
@@ -173,7 +173,7 @@ func (m model) renderServicesPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == mainPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -195,22 +195,22 @@ func (m model) renderServicesPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰘦  Services")
+		Render(" SERVICES")
 
 	s.WriteString(titleStyle + "\n\n")
 
 	if len(m.config.Services) == 0 {
 		emptyIcon := lipgloss.NewStyle().
-			Foreground(mutedColor).
-			Render("󰉋")
+			Foreground(fgMuted).
+			Render("[?]")
 
 		emptyTitle := lipgloss.NewStyle().
-			Foreground(subtleColor).
+			Foreground(fgSubtle).
 			Bold(true).
 			Render("No services configured")
 
 		emptyDesc := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Press 'n' to add a new service")
 
 		emptyBox := lipgloss.NewStyle().
@@ -258,7 +258,7 @@ func (m model) renderServicesPanel() string {
 
 		if showScrollTop {
 			scrollIndicator := lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Italic(true).
 				Render(fmt.Sprintf("  ↑ %d more", startIdx))
 			s.WriteString(scrollIndicator + "\n")
@@ -276,14 +276,14 @@ func (m model) renderServicesPanel() string {
 					Render(" "))
 			} else {
 				line.WriteString(lipgloss.NewStyle().
-					Foreground(mutedColor).
+					Foreground(fgMuted).
 					Render("  "))
 			}
 
 			badge := getServiceBadge(service.Type).Render(strings.ToUpper(service.Type))
 			line.WriteString(badge + " ")
 
-			iconStyle := lipgloss.NewStyle().Foreground(fgColor)
+			iconStyle := lipgloss.NewStyle().Foreground(infoColor)
 			line.WriteString(iconStyle.Render(icon) + " ")
 
 			nameStyle := lipgloss.NewStyle().Bold(true).Foreground(fgColor)
@@ -292,19 +292,15 @@ func (m model) renderServicesPanel() string {
 			status := m.serviceStatus[service.Name]
 			if status.running {
 				statusBadge := lipgloss.NewStyle().
-					Foreground(bgColor).
-					Background(successColor).
-					Padding(0, 1).
+					Foreground(successColor).
 					Bold(true).
-					Render(" 󰀄 ")
-				line.WriteString(" " + statusBadge)
+					Render(" ● ")
+				line.WriteString(statusBadge)
 			} else {
 				statusBadge := lipgloss.NewStyle().
-					Foreground(bgColor).
-					Background(mutedColor).
-					Padding(0, 1).
-					Render(" 󰀊 ")
-				line.WriteString(" " + statusBadge)
+					Foreground(fgMuted).
+					Render(" ● ")
+				line.WriteString(statusBadge)
 			}
 
 			portBadge := lipgloss.NewStyle().
@@ -333,7 +329,7 @@ func (m model) renderServicesPanel() string {
 
 		if showScrollBottom {
 			scrollIndicator := lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Italic(true).
 				Render(fmt.Sprintf("  ↓ %d more", len(m.config.Services)-endIdx))
 			s.WriteString(scrollIndicator + "\n")
@@ -356,7 +352,7 @@ func (m model) renderAddServicePanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == mainPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -373,12 +369,12 @@ func (m model) renderAddServicePanel() string {
 		Height(panelHeight)
 
 	titleStyle := lipgloss.NewStyle().
-		Foreground(secondaryColor).
+		Foreground(fgMuted).
 		Bold(true).
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰈙  Add New Service")
+		Render("ADD SERVICE")
 
 	s.WriteString(titleStyle + "\n\n")
 
@@ -387,20 +383,20 @@ func (m model) renderAddServicePanel() string {
 		desc string
 		icon string
 	}{
-		{"PHP", "PHP-FPM or Apache with PHP", "󰌞"},
-		{"MySQL", "MySQL Database Server", "󱆟"},
-		{"MariaDB", "MariaDB Database Server", "󱆟"},
-		{"PostgreSQL", "PostgreSQL Database", "󱆢"},
-		{"Nginx", "Nginx Web Server", "󰖟"},
-		{"Apache", "Apache HTTP Server", "󰖟"},
-		{"Caddy", "Caddy Web Server", "󰖟"},
-		{"Redis", "Redis Cache Server", "󰝚"},
-		{"MongoDB", "MongoDB NoSQL Database", "󱆦"},
-		{"phpMyAdmin", "MySQL Web Interface", "󰖶"},
-		{"Adminer", "Database Management Tool", "󱆦"},
-		{"Elasticsearch", "Search Engine", "󰉋"},
-		{"RabbitMQ", "Message Queue", "󰘦"},
-		{"Memcached", "Memory Cache", "󰘦"},
+		{"PHP", "PHP-FPM or Apache with PHP", "PHP"},
+		{"MySQL", "MySQL Database Server", "MySQL"},
+		{"MariaDB", "MariaDB Database Server", "MariaDB"},
+		{"PostgreSQL", "PostgreSQL Database", "PGSQL"},
+		{"Nginx", "Nginx Web Server", "Nginx"},
+		{"Apache", "Apache HTTP Server", "Apache"},
+		{"Caddy", "Caddy Web Server", "Caddy"},
+		{"Redis", "Redis Cache Server", "Redis"},
+		{"MongoDB", "MongoDB NoSQL Database", "Mongo"},
+		{"phpMyAdmin", "MySQL Web Interface", "PMA"},
+		{"Adminer", "Database Management Tool", "Admin"},
+		{"Elasticsearch", "Search Engine", "ES"},
+		{"RabbitMQ", "Message Queue", "RMQ"},
+		{"Memcached", "Memory Cache", "MC"},
 	}
 
 	subHeader := lipgloss.NewStyle().
@@ -438,7 +434,7 @@ func (m model) renderAddServicePanel() string {
 
 	if showScrollTop {
 		scrollInfo := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Render(fmt.Sprintf("  ↑ %d more", startIdx))
 		s.WriteString(scrollInfo + "\n")
@@ -455,7 +451,7 @@ func (m model) renderAddServicePanel() string {
 				Render(" "))
 		} else {
 			line.WriteString(lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Render("  "))
 		}
 
@@ -491,7 +487,7 @@ func (m model) renderAddServicePanel() string {
 
 	if showScrollBottom {
 		scrollInfo := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Render(fmt.Sprintf("  ↓ %d more", len(availableServices)-endIdx))
 		s.WriteString(scrollInfo + "\n")
@@ -513,7 +509,7 @@ func (m model) renderSettingsPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == mainPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -535,13 +531,13 @@ func (m model) renderSettingsPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰒓  Settings")
+		Render(" SETTINGS")
 
 	s.WriteString(titleStyle + "\n\n")
 
 	serverBox := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(secondaryColor).
+		BorderForeground(fgMuted).
 		Padding(1, 2).
 		Width(panelWidth - 8).
 		Background(surfaceBg)
@@ -549,9 +545,9 @@ func (m model) renderSettingsPanel() string {
 	var serverContent strings.Builder
 
 	serverContent.WriteString(lipgloss.NewStyle().
-		Foreground(secondaryColor).
+		Foreground(fgMuted).
 		Bold(true).
-		Render("󰖟  Web Server") + "\n\n")
+		Render(" WEB SERVER") + "\n\n")
 
 	servers := []struct {
 		name   string
@@ -567,7 +563,7 @@ func (m model) renderSettingsPanel() string {
 		if srv.active {
 			line.WriteString(lipgloss.NewStyle().
 				Foreground(successColor).
-				Render("󰀄 "))
+				Render("* "))
 			line.WriteString(lipgloss.NewStyle().
 				Foreground(bgColor).
 				Background(successColor).
@@ -576,10 +572,10 @@ func (m model) renderSettingsPanel() string {
 				Render(srv.name + "  ACTIVE"))
 		} else {
 			line.WriteString(lipgloss.NewStyle().
-				Foreground(mutedColor).
-				Render("󰀊 "))
+				Foreground(fgMuted).
+				Render("- "))
 			line.WriteString(lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Render(srv.name))
 		}
 		serverContent.WriteString(line.String() + "\n")
@@ -599,7 +595,7 @@ func (m model) renderSettingsPanel() string {
 	runtimeContent.WriteString(lipgloss.NewStyle().
 		Foreground(infoColor).
 		Bold(true).
-		Render("󰌠  Runtime Versions") + "\n\n")
+		Render(" RUNTIME VERSIONS") + "\n\n")
 
 	runtimes := []struct {
 		name    string
@@ -608,7 +604,7 @@ func (m model) renderSettingsPanel() string {
 	}{
 		{"PHP", m.config.Runtimes.PHP, "󰌞"},
 		{"Node.js", m.config.Runtimes.Node, "󰛦"},
-		{"Python", m.config.Runtimes.Python, "󰌠"},
+		{"Python", m.config.Runtimes.Python, "[R]"},
 		{"Go", m.config.Runtimes.Go, "󰟓"},
 		{"Rust", m.config.Runtimes.Rust, "󱘘"},
 		{"Bun", m.config.Runtimes.Bun, "󰛦"},
@@ -623,7 +619,7 @@ func (m model) renderSettingsPanel() string {
 			Bold(true).
 			Render(rt.name))
 		line.WriteString(lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render(": "))
 		line.WriteString(lipgloss.NewStyle().
 			Foreground(successColor).
@@ -636,7 +632,7 @@ func (m model) renderSettingsPanel() string {
 	s.WriteString(runtimeBox.Render(runtimeContent.String()) + "\n\n")
 
 	helpBox := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Italic(true).
 		Width(panelWidth - 8).
 		Align(lipgloss.Center).
@@ -681,7 +677,7 @@ func (m model) renderServiceDetailPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == detailPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -707,7 +703,7 @@ func (m model) renderServiceDetailPanel() string {
 			Padding(0, 1).
 			Background(surface0).
 			Width(panelWidth - 4).
-			Render("󰡨  Service Details")
+			Render(" SERVICE DETAILS")
 
 		s.WriteString(titleStyle + "\n\n")
 
@@ -721,7 +717,7 @@ func (m model) renderServiceDetailPanel() string {
 		var info strings.Builder
 
 		info.WriteString(lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Name: "))
 		info.WriteString(lipgloss.NewStyle().
 			Foreground(primaryColor).
@@ -729,13 +725,13 @@ func (m model) renderServiceDetailPanel() string {
 			Render(service.Name) + "\n")
 
 		info.WriteString(lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Type: "))
 		badge := getServiceBadge(service.Type).Render(strings.ToUpper(service.Type))
 		info.WriteString(badge + "\n")
 
 		info.WriteString(lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Version: "))
 		info.WriteString(lipgloss.NewStyle().
 			Foreground(infoColor).
@@ -744,7 +740,7 @@ func (m model) renderServiceDetailPanel() string {
 			Render("v"+service.Version) + "\n")
 
 		info.WriteString(lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Port: "))
 		info.WriteString(lipgloss.NewStyle().
 			Foreground(warningColor).
@@ -752,7 +748,7 @@ func (m model) renderServiceDetailPanel() string {
 			Render(fmt.Sprintf(":%d", service.Port)) + "\n")
 
 		info.WriteString(lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Status: "))
 		if status.running {
 			info.WriteString(lipgloss.NewStyle().
@@ -760,21 +756,21 @@ func (m model) renderServiceDetailPanel() string {
 				Background(successColor).
 				Padding(0, 1).
 				Bold(true).
-				Render(" 󰀄 Running") + "\n")
+				Render(" * Running") + "\n")
 		} else {
 			info.WriteString(lipgloss.NewStyle().
 				Foreground(bgColor).
-				Background(mutedColor).
+				Background(fgMuted).
 				Padding(0, 1).
-				Render(" 󰀊 Stopped") + "\n")
+				Render(" - Stopped") + "\n")
 		}
 
 		if status.containerId != "" {
 			info.WriteString(lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Render("Container: "))
 			info.WriteString(lipgloss.NewStyle().
-				Foreground(subtleColor).
+				Foreground(fgSubtle).
 				Render(status.containerId[:12]) + "\n")
 		}
 
@@ -782,9 +778,9 @@ func (m model) renderServiceDetailPanel() string {
 
 		if len(service.Env) > 0 {
 			envHeader := lipgloss.NewStyle().
-				Foreground(secondaryColor).
+				Foreground(fgMuted).
 				Bold(true).
-				Render("󰌮  Environment Variables")
+				Render(" ENVIRONMENT")
 			s.WriteString(envHeader + "\n\n")
 
 			envBox := lipgloss.NewStyle().
@@ -800,7 +796,7 @@ func (m model) renderServiceDetailPanel() string {
 					Foreground(infoColor).
 					Render(k))
 				envContent.WriteString(lipgloss.NewStyle().
-					Foreground(mutedColor).
+					Foreground(fgMuted).
 					Render("="))
 				envContent.WriteString(lipgloss.NewStyle().
 					Foreground(fgColor).
@@ -811,9 +807,9 @@ func (m model) renderServiceDetailPanel() string {
 		}
 	} else {
 		emptyState := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
-			Render("󰉋  No service selected")
+			Render("-- No service selected")
 		s.WriteString(emptyState)
 	}
 
@@ -833,7 +829,7 @@ func (m model) renderProjectDetailPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == detailPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -855,7 +851,7 @@ func (m model) renderProjectDetailPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰉋  Project Details")
+		Render(" PROJECT DETAILS")
 
 	s.WriteString(titleStyle + "\n\n")
 
@@ -871,43 +867,43 @@ func (m model) renderProjectDetailPanel() string {
 
 		var info strings.Builder
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Name: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Name: "))
 		info.WriteString(lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render(project.Name) + "\n")
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Type: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Type: "))
 		badge := getProjectBadge(project.Type).Render(strings.ToUpper(project.Type))
 		info.WriteString(badge + "\n")
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Path: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Path: "))
 		info.WriteString(lipgloss.NewStyle().Foreground(infoColor).Render(project.Path) + "\n")
 
 		if project.Domain != "" {
-			info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Domain: "))
+			info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Domain: "))
 			info.WriteString(lipgloss.NewStyle().Foreground(warningColor).Render(project.Domain) + "\n")
 		}
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Status: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Status: "))
 		if project.Status == "running" {
 			info.WriteString(lipgloss.NewStyle().
 				Foreground(bgColor).
 				Background(successColor).
 				Padding(0, 1).
 				Bold(true).
-				Render(" 󰀄 Running") + "\n")
+				Render(" * Running") + "\n")
 		} else {
 			info.WriteString(lipgloss.NewStyle().
 				Foreground(bgColor).
-				Background(mutedColor).
+				Background(fgMuted).
 				Padding(0, 1).
-				Render(" 󰀊 Stopped") + "\n")
+				Render(" - Stopped") + "\n")
 		}
 
 		s.WriteString(infoBox.Render(info.String()))
 	} else {
 		emptyState := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
-			Render("󰉋  No project selected")
+			Render("-- No project selected")
 		s.WriteString(emptyState)
 	}
 
@@ -927,7 +923,7 @@ func (m model) renderDatabaseDetailPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == detailPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -949,7 +945,7 @@ func (m model) renderDatabaseDetailPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󱆟  Database Details")
+		Render(" DATABASE DETAILS")
 
 	s.WriteString(titleStyle + "\n\n")
 
@@ -980,43 +976,43 @@ func (m model) renderDatabaseDetailPanel() string {
 
 		var info strings.Builder
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Name: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Name: "))
 		info.WriteString(lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render(db.name) + "\n")
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Type: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Type: "))
 		badge := getServiceBadge(db.type_).Render(strings.ToUpper(db.type_))
 		info.WriteString(badge + "\n")
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Port: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Port: "))
 		info.WriteString(lipgloss.NewStyle().Foreground(warningColor).Bold(true).Render(fmt.Sprintf(":%d", db.port)) + "\n")
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Status: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Status: "))
 		if db.status == "running" {
 			info.WriteString(lipgloss.NewStyle().
 				Foreground(bgColor).
 				Background(successColor).
 				Padding(0, 1).
 				Bold(true).
-				Render(" 󰀄 Running") + "\n")
+				Render(" * Running") + "\n")
 		} else {
 			info.WriteString(lipgloss.NewStyle().
 				Foreground(bgColor).
-				Background(mutedColor).
+				Background(fgMuted).
 				Padding(0, 1).
-				Render(" 󰀊 Stopped") + "\n")
+				Render(" - Stopped") + "\n")
 		}
 
 		if db.adminURL != "" {
-			info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Admin: "))
+			info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Admin: "))
 			info.WriteString(lipgloss.NewStyle().Foreground(infoColor).Render(db.adminURL) + "\n")
 		}
 
 		s.WriteString(infoBox.Render(info.String()))
 	} else {
 		emptyState := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
-			Render("󰉋  No database selected")
+			Render("-- No database selected")
 		s.WriteString(emptyState)
 	}
 
@@ -1058,7 +1054,7 @@ func (m model) renderRuntimeDetailPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰌠  Runtime Details")
+		Render(" RUNTIME DETAILS")
 
 	s.WriteString(titleStyle + "\n\n")
 
@@ -1087,22 +1083,22 @@ func (m model) renderRuntimeDetailPanel() string {
 
 		var info strings.Builder
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Runtime: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Runtime: "))
 		info.WriteString(lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render(rt.name) + "\n\n")
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Current Version: "))
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Current Version: "))
 		info.WriteString(lipgloss.NewStyle().Foreground(infoColor).Bold(true).
 			Background(surface0).Padding(0, 1).Render("v"+rt.version) + "\n\n")
 
-		info.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Italic(true).
+		info.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Italic(true).
 			Render("Press 'v' to change version"))
 
 		s.WriteString(infoBox.Render(info.String()))
 	} else {
 		emptyState := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
-			Render("󰉋  No runtime selected")
+			Render("-- No runtime selected")
 		s.WriteString(emptyState)
 	}
 
@@ -1144,7 +1140,7 @@ func (m model) renderLogsDetailPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰌱  Log Statistics")
+		Render(" LOG STATS")
 
 	s.WriteString(titleStyle + "\n\n")
 
@@ -1175,23 +1171,23 @@ func (m model) renderLogsDetailPanel() string {
 		}
 	}
 
-	stats.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Total Logs: "))
+	stats.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Total Logs: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Bold(true).Render(fmt.Sprintf("%d", len(m.logs))) + "\n\n")
 
 	stats.WriteString(lipgloss.NewStyle().Foreground(bgColor).
-		Background(successColor).Padding(0, 1).Render(" 󰸞 Success: "))
+		Background(successColor).Padding(0, 1).Render(" OK: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Render(fmt.Sprintf(" %d", successCount)) + "\n\n")
 
 	stats.WriteString(lipgloss.NewStyle().Foreground(bgColor).
-		Background(errorColor).Padding(0, 1).Render(" 󰚌 Errors: "))
+		Background(errorColor).Padding(0, 1).Render(" ERR: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Render(fmt.Sprintf(" %d", errorCount)) + "\n\n")
 
 	stats.WriteString(lipgloss.NewStyle().Foreground(bgColor).
-		Background(warningColor).Padding(0, 1).Render(" 󰀦 Warnings: "))
+		Background(warningColor).Padding(0, 1).Render(" WARN: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Render(fmt.Sprintf(" %d", warningCount)) + "\n\n")
 
 	stats.WriteString(lipgloss.NewStyle().Foreground(bgColor).
-		Background(infoColor).Padding(0, 1).Render(" 󰋽 Info: "))
+		Background(infoColor).Padding(0, 1).Render(" INFO: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Render(fmt.Sprintf(" %d", infoCount)))
 
 	s.WriteString(statsBox.Render(stats.String()))
@@ -1229,7 +1225,7 @@ func (m model) renderTasksDetailPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰘦  Task Statistics")
+		Render(" TASK STATISTICS")
 
 	s.WriteString(titleStyle + "\n\n")
 
@@ -1257,19 +1253,19 @@ func (m model) renderTasksDetailPanel() string {
 		}
 	}
 
-	stats.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Total Tasks: "))
+	stats.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Total Tasks: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Bold(true).Render(fmt.Sprintf("%d", len(m.backgroundTasks))) + "\n\n")
 
 	stats.WriteString(lipgloss.NewStyle().Foreground(bgColor).
-		Background(infoColor).Padding(0, 1).Render(" ⟳ Running: "))
+		Background(infoColor).Padding(0, 1).Render(" RUN: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Render(fmt.Sprintf(" %d", runningCount)) + "\n\n")
 
 	stats.WriteString(lipgloss.NewStyle().Foreground(bgColor).
-		Background(successColor).Padding(0, 1).Render(" 󰸞 Completed: "))
+		Background(successColor).Padding(0, 1).Render(" OK Completed: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Render(fmt.Sprintf(" %d", completedCount)) + "\n\n")
 
 	stats.WriteString(lipgloss.NewStyle().Foreground(bgColor).
-		Background(errorColor).Padding(0, 1).Render(" 󰚌 Failed: "))
+		Background(errorColor).Padding(0, 1).Render(" X Failed: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Render(fmt.Sprintf(" %d", failedCount)))
 
 	s.WriteString(statsBox.Render(stats.String()))
@@ -1285,7 +1281,7 @@ func (m model) renderSettingsDetailPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == detailPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -1307,7 +1303,7 @@ func (m model) renderSettingsDetailPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰒓  System Info")
+		Render(" SYSTEM INFO")
 
 	s.WriteString(titleStyle + "\n\n")
 
@@ -1323,12 +1319,12 @@ func (m model) renderSettingsDetailPanel() string {
 	about.WriteString(lipgloss.NewStyle().
 		Foreground(primaryColor).
 		Bold(true).
-		Render("󰘦  Lumine") + "\n")
+		Render("LUMINE") + "\n")
 	about.WriteString(lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Render("Docker Development Manager") + "\n\n")
 	about.WriteString(lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Render("Version: "))
 	about.WriteString(lipgloss.NewStyle().
 		Foreground(infoColor).
@@ -1336,10 +1332,10 @@ func (m model) renderSettingsDetailPanel() string {
 		Padding(0, 1).
 		Render("v1.0.0") + "\n")
 	about.WriteString(lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Render("Theme: "))
 	about.WriteString(lipgloss.NewStyle().
-		Foreground(secondaryColor).
+		Foreground(fgMuted).
 		Background(surface0).
 		Padding(0, 1).
 		Render("Catppuccin Mocha") + "\n")
@@ -1358,16 +1354,16 @@ func (m model) renderSettingsDetailPanel() string {
 	dockerInfo.WriteString(lipgloss.NewStyle().
 		Foreground(infoColor).
 		Bold(true).
-		Render("󰡨  Docker") + "\n\n")
+		Render(" DOCKER") + "\n\n")
 
 	dockerInfo.WriteString(lipgloss.NewStyle().
 		Foreground(bgColor).
 		Background(successColor).
 		Padding(0, 1).
-		Render(" 󰀄  Connected") + "\n\n")
+		Render(" *  Connected") + "\n\n")
 
 	dockerInfo.WriteString(lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Render("Config: "))
 	dockerInfo.WriteString(lipgloss.NewStyle().
 		Foreground(fgColor).
@@ -1394,20 +1390,20 @@ func (m model) renderSettingsDetailPanel() string {
 	stats.WriteString(lipgloss.NewStyle().
 		Foreground(successColor).
 		Bold(true).
-		Render("󰡨  Statistics") + "\n\n")
+		Render(" STATS") + "\n\n")
 
-	stats.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Services: "))
+	stats.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Services: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Bold(true).Render(fmt.Sprintf("%d", len(m.config.Services))) + "\n")
 
-	stats.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Running: "))
+	stats.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Running: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(bgColor).
 		Background(successColor).Padding(0, 1).
 		Render(fmt.Sprintf(" %d ", runningCount)) + "\n")
 
-	stats.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Projects: "))
+	stats.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Projects: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(fgColor).Bold(true).Render(fmt.Sprintf("%d", len(m.config.Projects))) + "\n")
 
-	stats.WriteString(lipgloss.NewStyle().Foreground(mutedColor).Render("Logs: "))
+	stats.WriteString(lipgloss.NewStyle().Foreground(fgMuted).Render("Logs: "))
 	stats.WriteString(lipgloss.NewStyle().Foreground(infoColor).Render(fmt.Sprintf("%d", len(m.logs))) + "\n")
 
 	s.WriteString(statsBox.Render(stats.String()))
@@ -1442,7 +1438,7 @@ func (m model) renderStatusBar() string {
 			Background(primaryColor).
 			Bold(true).
 			Padding(0, 2).
-			Render(" 󰘦 "+viewName+" "))
+			Render(" "+viewName+" "))
 	}
 
 	selectedCount := 0
@@ -1467,7 +1463,7 @@ func (m model) renderStatusBar() string {
 		}
 	}
 
-	statusText := fmt.Sprintf("󰀄  %d/%d running", runningCount, len(m.config.Services))
+	statusText := fmt.Sprintf("*  %d/%d running", runningCount, len(m.config.Services))
 	statusStyle := lipgloss.NewStyle().
 		Foreground(bgColor).
 		Background(successColor).
@@ -1477,7 +1473,7 @@ func (m model) renderStatusBar() string {
 	if runningCount == 0 {
 		statusStyle = lipgloss.NewStyle().
 			Foreground(bgColor).
-			Background(mutedColor).
+			Background(fgMuted).
 			Padding(0, 2)
 	}
 
@@ -1488,7 +1484,7 @@ func (m model) renderStatusBar() string {
 			Foreground(bgColor).
 			Background(infoColor).
 			Padding(0, 2).
-			Render(" 󰋽 "+m.statusMessage+" "))
+			Render(" -- "+m.statusMessage+" "))
 	}
 
 	statusContent := strings.Join(parts, " ")

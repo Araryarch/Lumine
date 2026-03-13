@@ -621,11 +621,11 @@ func (m model) View() string {
 			Render("Lumine")
 
 		loadingSubtitle := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Docker Development Manager")
 
 		loadingDots := lipgloss.NewStyle().
-			Foreground(secondaryColor).
+			Foreground(fgMuted).
 			Render("...")
 
 		loadingBox := lipgloss.NewStyle().
@@ -722,7 +722,7 @@ func (m model) renderTitleBar() string {
 		Render(" Docker Development Manager ")
 
 	version := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Background(surfaceBg).
 		Padding(0, 2).
 		Render(" v1.0.0 ")

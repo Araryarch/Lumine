@@ -15,7 +15,7 @@ func (m model) renderProjectsPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == mainPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -37,22 +37,22 @@ func (m model) renderProjectsPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰉋  Projects")
+		Render("[ ]  Projects")
 
 	s.WriteString(titleStyle + "\n\n")
 
 	if len(m.config.Projects) == 0 {
 		emptyIcon := lipgloss.NewStyle().
-			Foreground(mutedColor).
-			Render("󰈙")
+			Foreground(fgMuted).
+			Render("[+]")
 
 		emptyTitle := lipgloss.NewStyle().
-			Foreground(subtleColor).
+			Foreground(fgSubtle).
 			Bold(true).
 			Render("No projects yet")
 
 		emptyDesc := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Press 'n' to create a new project")
 
 		emptyBox := lipgloss.NewStyle().
@@ -100,7 +100,7 @@ func (m model) renderProjectsPanel() string {
 
 		if showScrollTop {
 			scrollIndicator := lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Italic(true).
 				Render(fmt.Sprintf("  ↑ %d more", startIdx))
 			s.WriteString(scrollIndicator + "\n")
@@ -118,12 +118,12 @@ func (m model) renderProjectsPanel() string {
 					Render(" "))
 			} else {
 				line.WriteString(lipgloss.NewStyle().
-					Foreground(mutedColor).
+					Foreground(fgMuted).
 					Render("  "))
 			}
 
 			statusIcon := "󰀊"
-			statusStyle := mutedColor
+			statusStyle := fgMuted
 			if project.Status == "running" {
 				statusIcon = "󰀄"
 				statusStyle = successColor
@@ -170,7 +170,7 @@ func (m model) renderProjectsPanel() string {
 
 		if showScrollBottom {
 			scrollIndicator := lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Italic(true).
 				Render(fmt.Sprintf("  ↓ %d more", len(m.config.Projects)-endIdx))
 			s.WriteString(scrollIndicator + "\n")
@@ -193,7 +193,7 @@ func (m model) renderRuntimesPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == mainPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -215,7 +215,7 @@ func (m model) renderRuntimesPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰌠  Runtimes")
+		Render("[R]  Runtimes")
 
 	s.WriteString(titleStyle + "\n\n")
 
@@ -226,7 +226,7 @@ func (m model) renderRuntimesPanel() string {
 	}{
 		{"PHP", m.config.Runtimes.PHP, "󰌞"},
 		{"Node.js", m.config.Runtimes.Node, "󰛦"},
-		{"Python", m.config.Runtimes.Python, "󰌠"},
+		{"Python", m.config.Runtimes.Python, "[R]"},
 		{"Rust", m.config.Runtimes.Rust, "󱘘"},
 		{"Bun", m.config.Runtimes.Bun, "󰛦"},
 		{"Deno", m.config.Runtimes.Deno, "󰛦"},
@@ -263,7 +263,7 @@ func (m model) renderRuntimesPanel() string {
 
 	if showScrollTop {
 		scrollIndicator := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Render(fmt.Sprintf("  ↑ %d more", startIdx))
 		s.WriteString(scrollIndicator + "\n")
@@ -280,7 +280,7 @@ func (m model) renderRuntimesPanel() string {
 				Render(" "))
 		} else {
 			line.WriteString(lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Render("  "))
 		}
 
@@ -314,7 +314,7 @@ func (m model) renderRuntimesPanel() string {
 
 	if showScrollBottom {
 		scrollIndicator := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Render(fmt.Sprintf("  ↓ %d more", len(runtimes)-endIdx))
 		s.WriteString(scrollIndicator + "\n")
@@ -323,10 +323,10 @@ func (m model) renderRuntimesPanel() string {
 	s.WriteString("\n")
 
 	helpText := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Render("Press ") +
 		lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render("'v'") +
-		lipgloss.NewStyle().Foreground(mutedColor).Render(" to change version")
+		lipgloss.NewStyle().Foreground(fgMuted).Render(" to change version")
 	s.WriteString(helpText)
 
 	currentLines := strings.Count(s.String(), "\n")
@@ -335,51 +335,4 @@ func (m model) renderRuntimesPanel() string {
 	}
 
 	return style.Render(s.String())
-}
-
-func getProjectBadge(projectType string) lipgloss.Style {
-	switch projectType {
-	case "laravel":
-		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#FF2D20")).
-			Padding(0, 1).
-			Bold(true)
-	case "nextjs":
-		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#000000")).
-			Padding(0, 1).
-			Bold(true)
-	case "vue":
-		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#42B883")).
-			Padding(0, 1).
-			Bold(true)
-	case "django":
-		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#092E20")).
-			Padding(0, 1).
-			Bold(true)
-	case "express":
-		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#000000")).
-			Padding(0, 1).
-			Bold(true)
-	case "axum", "actix", "rocket":
-		return lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#CE422B")).
-			Padding(0, 1).
-			Bold(true)
-	default:
-		return lipgloss.NewStyle().
-			Foreground(fgColor).
-			Background(surface1).
-			Padding(0, 1).
-			Bold(true)
-	}
 }

@@ -15,7 +15,7 @@ func (m model) renderLogsPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == mainPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -37,22 +37,22 @@ func (m model) renderLogsPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰌱  Logs")
+		Render("[L]  Logs")
 
 	s.WriteString(titleStyle + "\n\n")
 
 	if len(m.logs) == 0 {
 		emptyIcon := lipgloss.NewStyle().
-			Foreground(mutedColor).
-			Render("󰌱")
+			Foreground(fgMuted).
+			Render("[L]")
 
 		emptyTitle := lipgloss.NewStyle().
-			Foreground(subtleColor).
+			Foreground(fgSubtle).
 			Bold(true).
 			Render("No logs yet")
 
 		emptyDesc := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Logs will appear when you perform actions")
 
 		emptyBox := lipgloss.NewStyle().
@@ -84,7 +84,7 @@ func (m model) renderLogsPanel() string {
 			log := m.logs[i]
 
 			timestamp := lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Render(log.timestamp)
 
 			var levelStyle lipgloss.Style
@@ -92,16 +92,16 @@ func (m model) renderLogsPanel() string {
 			switch log.level {
 			case "success":
 				levelStyle = lipgloss.NewStyle().Foreground(successColor).Bold(true)
-				levelIcon = "󰸞"
+				levelIcon = "OK"
 			case "error":
 				levelStyle = lipgloss.NewStyle().Foreground(errorColor).Bold(true)
-				levelIcon = "󰚌"
+				levelIcon = "X"
 			case "warning":
 				levelStyle = lipgloss.NewStyle().Foreground(warningColor).Bold(true)
-				levelIcon = "󰀦"
+				levelIcon = "!"
 			default:
 				levelStyle = lipgloss.NewStyle().Foreground(infoColor)
-				levelIcon = "󰋽"
+				levelIcon = "i"
 			}
 			level := levelStyle.Render(levelIcon)
 
@@ -154,7 +154,7 @@ func (m model) renderBackgroundTasksPanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == mainPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -176,22 +176,22 @@ func (m model) renderBackgroundTasksPanel() string {
 		Padding(0, 1).
 		Background(surface0).
 		Width(panelWidth - 4).
-		Render("󰘦  Background Tasks")
+		Render("[S]  Background Tasks")
 
 	s.WriteString(titleStyle + "\n\n")
 
 	if len(m.backgroundTasks) == 0 {
 		emptyIcon := lipgloss.NewStyle().
-			Foreground(mutedColor).
-			Render("󰘦")
+			Foreground(fgMuted).
+			Render("[S]")
 
 		emptyTitle := lipgloss.NewStyle().
-			Foreground(subtleColor).
+			Foreground(fgSubtle).
 			Bold(true).
 			Render("No background tasks")
 
 		emptyDesc := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Tasks appear when operations run")
 
 		emptyBox := lipgloss.NewStyle().
@@ -230,14 +230,14 @@ func (m model) renderBackgroundTasksPanel() string {
 				statusStyle = lipgloss.NewStyle().Foreground(errorColor)
 				statusIcon = "󰚌"
 			default:
-				statusStyle = lipgloss.NewStyle().Foreground(mutedColor)
+				statusStyle = lipgloss.NewStyle().Foreground(fgMuted)
 				statusIcon = "○"
 			}
 
 			status := statusStyle.Render(statusIcon)
 
 			time := lipgloss.NewStyle().
-				Foreground(mutedColor).
+				Foreground(fgMuted).
 				Render(task.startTime)
 
 			name := lipgloss.NewStyle().

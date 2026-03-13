@@ -85,7 +85,7 @@ func (t TextInput) Render() string {
 		Width(t.Width)
 
 	if t.Focused {
-		boxStyle = boxStyle.BorderForeground(secondaryColor)
+		boxStyle = boxStyle.BorderForeground(primaryColor)
 	} else {
 		boxStyle = boxStyle.BorderForeground(surface1)
 	}
@@ -93,7 +93,7 @@ func (t TextInput) Render() string {
 	var content string
 	if t.Value == "" && !t.Focused {
 		content = lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Render(t.Placeholder)
 	} else {

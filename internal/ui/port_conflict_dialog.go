@@ -17,7 +17,7 @@ func (m model) renderPortConflictDialog() string {
 		Background(warningColor).
 		Bold(true).
 		Padding(1, 3).
-		Render(" 󰀦  Port Conflict Detected  ")
+		Render(" !  Port Conflict Detected  ")
 
 	content.WriteString(titleBox + "\n\n")
 
@@ -79,7 +79,7 @@ func (m model) renderPortConflictDialog() string {
 
 		content.WriteString("\n")
 		content.WriteString(lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Render("Or enter custom port: "))
 
 		if m.customPortInput != "" {
@@ -103,13 +103,13 @@ func (m model) renderPortConflictDialog() string {
 	helpItems := []string{
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(primaryColor).Padding(0, 2).Bold(true).Render(" ↑↓ ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" navigate"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" navigate"),
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(successColor).Padding(0, 2).Bold(true).Render(" enter ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" use port"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" use port"),
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(errorColor).Padding(0, 2).Bold(true).Render(" esc ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" cancel"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" cancel"),
 	}
 
 	helpText := strings.Join(helpItems, "  "+lipgloss.NewStyle().Foreground(surface1).Render("│")+"  ")

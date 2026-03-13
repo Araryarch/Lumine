@@ -26,7 +26,7 @@ func (m model) renderCleanupDialog() string {
 		Background(errorColor).
 		Bold(true).
 		Padding(1, 3).
-		Render(" 󰀎  Cleanup Options  ")
+		Render(" X  Cleanup Options  ")
 
 	content.WriteString(titleBox + "\n\n")
 
@@ -42,7 +42,7 @@ func (m model) renderCleanupDialog() string {
 		Align(lipgloss.Center).
 		Width(modalWidth - 12).
 		Bold(true).
-		Render(" 󰀦  Select what to remove  ")
+		Render(" !  Select what to remove  ")
 	content.WriteString(warningBox + "\n\n")
 
 	options := []struct {
@@ -51,9 +51,9 @@ func (m model) renderCleanupDialog() string {
 		icon        string
 		danger      bool
 	}{
-		{"Remove Container", "Stop and remove this container only", "󰡨", false},
-		{"Remove with Volume", "Remove container and its data volume", "󰉋", true},
-		{"Remove All Containers", "Remove all Lumine containers", "󰡨", true},
+		{"Remove Container", "Stop and remove this container only", "[D]", false},
+		{"Remove with Volume", "Remove container and its data volume", "[ ]", true},
+		{"Remove All Containers", "Remove all Lumine containers", "[D]", true},
 		{"Nuclear Cleanup", "Remove EVERYTHING", "󰀎", true},
 	}
 
@@ -99,7 +99,7 @@ func (m model) renderCleanupDialog() string {
 		content.WriteString(lineStr + "\n")
 
 		descStyle := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Width(modalWidth-14).
 			Padding(0, 0, 0, 4)
@@ -129,13 +129,13 @@ func (m model) renderCleanupDialog() string {
 	helpItems := []string{
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(primaryColor).Padding(0, 2).Bold(true).Render(" ↑↓ ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" navigate"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" navigate"),
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(errorColor).Padding(0, 2).Bold(true).Render(" enter ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" confirm"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" confirm"),
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(successColor).Padding(0, 2).Bold(true).Render(" esc ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" cancel"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" cancel"),
 	}
 
 	helpText := strings.Join(helpItems, "  "+lipgloss.NewStyle().Foreground(surface1).Render("│")+"  ")
@@ -173,7 +173,7 @@ func (m model) renderConfirmDialog(message string) string {
 		Background(warningColor).
 		Bold(true).
 		Padding(1, 3).
-		Render(" 󰀦  WARNING  ")
+		Render(" !  WARNING  ")
 
 	content.WriteString(titleBox + "\n\n")
 
@@ -212,7 +212,7 @@ func (m model) renderConfirmDialog(message string) string {
 		Padding(1, 2).
 		Width(modalWidth - 8).
 		Align(lipgloss.Center).
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Render("Type 'yes' and press enter to confirm  •  esc to cancel")
 	content.WriteString(helpBox)
 

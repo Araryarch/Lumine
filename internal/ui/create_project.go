@@ -24,18 +24,18 @@ func (m model) renderProjectCreateModal() string {
 		icon    string
 	}{
 		{"Laravel", "Full-stack PHP Framework", "PHP 8.2", "󰖬"},
-		{"Next.js", "React Framework with SSR", "Node.js 20", "󰖟"},
+		{"Next.js", "React Framework with SSR", "Node.js 20", "[W]"},
 		{"Vue", "Progressive JavaScript Framework", "Node.js 20", "󰡄"},
-		{"Django", "High-level Python Framework", "Python 3.11", "󰘦"},
-		{"Express", "Minimal Node.js Framework", "Node.js 20", "󰘦"},
-		{"FastAPI", "Modern Python API Framework", "Python 3.11", "󰘦"},
-		{"Nuxt", "Vue Framework with SSR", "Node.js 20", "󰖟"},
-		{"SvelteKit", "Svelte Application Framework", "Node.js 20", "󰖟"},
-		{"Remix", "Full Stack React Framework", "Node.js 20", "󰖟"},
-		{"NestJS", "Progressive Node.js Framework", "Node.js 20", "󰖟"},
-		{"Axum", "Ergonomic Rust Web Framework", "Rust 1.75", "󰘦"},
-		{"Actix", "Powerful Rust Web Framework", "Rust 1.75", "󰘦"},
-		{"Rocket", "Simple Rust Web Framework", "Rust 1.75", "󰘦"},
+		{"Django", "High-level Python Framework", "Python 3.11", "[S]"},
+		{"Express", "Minimal Node.js Framework", "Node.js 20", "[S]"},
+		{"FastAPI", "Modern Python API Framework", "Python 3.11", "[S]"},
+		{"Nuxt", "Vue Framework with SSR", "Node.js 20", "[W]"},
+		{"SvelteKit", "Svelte Application Framework", "Node.js 20", "[W]"},
+		{"Remix", "Full Stack React Framework", "Node.js 20", "[W]"},
+		{"NestJS", "Progressive Node.js Framework", "Node.js 20", "[W]"},
+		{"Axum", "Ergonomic Rust Web Framework", "Rust 1.75", "[S]"},
+		{"Actix", "Powerful Rust Web Framework", "Rust 1.75", "[S]"},
+		{"Rocket", "Simple Rust Web Framework", "Rust 1.75", "[S]"},
 	}
 
 	modalWidth := 80
@@ -77,7 +77,7 @@ func (m model) renderProjectCreateModal() string {
 		Background(primaryColor).
 		Bold(true).
 		Padding(1, 3).
-		Render(" 󰈙  Create New Project  ")
+		Render(" [+]  Create New Project  ")
 	content.WriteString(titleBox + "\n\n")
 
 	// Divider
@@ -88,7 +88,7 @@ func (m model) renderProjectCreateModal() string {
 
 	// Subheader
 	subheader := lipgloss.NewStyle().
-		Foreground(secondaryColor).
+		Foreground(primaryColor).
 		Bold(true).
 		Render("Select a project type to get started:")
 	content.WriteString(subheader + "\n\n")
@@ -96,7 +96,7 @@ func (m model) renderProjectCreateModal() string {
 	// Scroll indicator top
 	if showScrollTop {
 		scrollTop := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Align(lipgloss.Center).
 			Width(modalWidth - 6).
@@ -138,7 +138,7 @@ func (m model) renderProjectCreateModal() string {
 
 		// Runtime badge
 		runtimeBadge := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Background(surface0).
 			Padding(0, 1).
 			Render(pt.runtime)
@@ -168,7 +168,7 @@ func (m model) renderProjectCreateModal() string {
 	// Scroll indicator bottom
 	if showScrollBottom {
 		scrollBottom := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Align(lipgloss.Center).
 			Width(modalWidth - 6).
@@ -190,13 +190,13 @@ func (m model) renderProjectCreateModal() string {
 	helpItems := []string{
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(primaryColor).Padding(0, 2).Bold(true).Render(" ↑↓ ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" navigate"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" navigate"),
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(successColor).Padding(0, 2).Bold(true).Render(" enter ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" select"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" select"),
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(errorColor).Padding(0, 2).Bold(true).Render(" esc ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" cancel"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" cancel"),
 	}
 
 	helpText := strings.Join(helpItems, "  "+lipgloss.NewStyle().Foreground(surface1).Render("│")+"  ")

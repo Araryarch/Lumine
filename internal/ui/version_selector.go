@@ -15,10 +15,10 @@ func (m model) renderVersionSelector() string {
 
 	titleBox := lipgloss.NewStyle().
 		Foreground(bgColor).
-		Background(secondaryColor).
+		Background(primaryColor).
 		Bold(true).
 		Padding(1, 3).
-		Render(" 󰌠  Select Version  ")
+		Render(" [R]  Select Version  ")
 
 	content.WriteString(titleBox + "\n\n")
 
@@ -39,7 +39,7 @@ func (m model) renderVersionSelector() string {
 	}
 
 	subheader := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Bold(true).
 		Render("Available Versions:")
 	content.WriteString(subheader + "\n")
@@ -74,7 +74,7 @@ func (m model) renderVersionSelector() string {
 
 	if showScrollTop {
 		scrollTop := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Align(lipgloss.Center).
 			Width(modalWidth - 8).
@@ -88,7 +88,7 @@ func (m model) renderVersionSelector() string {
 
 		if i == m.versionCursor {
 			line.WriteString(lipgloss.NewStyle().
-				Foreground(secondaryColor).
+				Foreground(primaryColor).
 				Bold(true).
 				Render(" "))
 		} else {
@@ -143,7 +143,7 @@ func (m model) renderVersionSelector() string {
 
 	if showScrollBottom {
 		scrollBottom := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Align(lipgloss.Center).
 			Width(modalWidth - 8).
@@ -152,7 +152,7 @@ func (m model) renderVersionSelector() string {
 	}
 
 	counter := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Background(surface0).
 		Align(lipgloss.Center).
 		Padding(0, 1).
@@ -171,13 +171,13 @@ func (m model) renderVersionSelector() string {
 	helpItems := []string{
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(primaryColor).Padding(0, 2).Bold(true).Render(" ↑↓ ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" navigate"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" navigate"),
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(successColor).Padding(0, 2).Bold(true).Render(" enter ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" select"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" select"),
 		lipgloss.NewStyle().Foreground(bgColor).
 			Background(errorColor).Padding(0, 2).Bold(true).Render(" esc ") +
-			lipgloss.NewStyle().Foreground(mutedColor).Render(" cancel"),
+			lipgloss.NewStyle().Foreground(fgMuted).Render(" cancel"),
 	}
 
 	helpText := strings.Join(helpItems, "  "+lipgloss.NewStyle().Foreground(surface1).Render("│")+"  ")
@@ -185,7 +185,7 @@ func (m model) renderVersionSelector() string {
 
 	modalBox := lipgloss.NewStyle().
 		Border(lipgloss.RoundedBorder()).
-		BorderForeground(secondaryColor).
+		BorderForeground(primaryColor).
 		Background(bgColor).
 		Padding(0, 0).
 		Width(modalWidth)

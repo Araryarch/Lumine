@@ -15,7 +15,7 @@ func (m model) renderDatabasePanel() string {
 
 	borderStyle := lipgloss.NormalBorder()
 	if m.activePanel == mainPanel {
-		borderStyle = lipgloss.DoubleBorder()
+		borderStyle = lipgloss.ThickBorder()
 	}
 
 	borderColorStyle := borderColor
@@ -86,7 +86,7 @@ func (m model) renderDatabasePanel() string {
 
 	if showScrollTop {
 		scrollIndicator := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Render(fmt.Sprintf("  ↑ %d more", startIdx))
 		s.WriteString(scrollIndicator + "\n")
@@ -97,21 +97,22 @@ func (m model) renderDatabasePanel() string {
 		var line strings.Builder
 
 		icon := getIconForService(db.type_)
+
+		// Cursor indicator with arrow
 		if m.cursor == i {
 			line.WriteString(lipgloss.NewStyle().
 				Foreground(primaryColor).
 				Bold(true).
-				Render(" "))
+				Render("▶ "))
 		} else {
-			line.WriteString(lipgloss.NewStyle().
-				Foreground(mutedColor).
-				Render("  "))
+			line.WriteString("  ")
 		}
 
-		statusIcon := "󰀊"
-		statusStyle := mutedColor
+		// Status indicator
+		statusIcon := "●"
+		statusStyle := fgMuted
 		if db.status == "running" {
-			statusIcon = "󰀄"
+			statusIcon = "●"
 			statusStyle = successColor
 		}
 
@@ -122,11 +123,10 @@ func (m model) renderDatabasePanel() string {
 		line.WriteString(lipgloss.NewStyle().Bold(true).Foreground(fgColor).Render(db.name))
 
 		statusBadge := lipgloss.NewStyle().
-			Foreground(bgColor).
-			Background(statusStyle).
-			Padding(0, 1).
-			Render(" " + statusIcon + " ")
-		line.WriteString(" " + statusBadge)
+			Foreground(statusStyle).
+			Bold(true).
+			Render(" " + statusIcon)
+		line.WriteString(statusBadge)
 
 		portBadge := lipgloss.NewStyle().
 			Foreground(warningColor).
@@ -154,7 +154,7 @@ func (m model) renderDatabasePanel() string {
 
 	if showScrollBottom {
 		scrollIndicator := lipgloss.NewStyle().
-			Foreground(mutedColor).
+			Foreground(fgMuted).
 			Italic(true).
 			Render(fmt.Sprintf("  ↓ %d more", len(databases)-endIdx))
 		s.WriteString(scrollIndicator + "\n")
@@ -163,10 +163,10 @@ func (m model) renderDatabasePanel() string {
 	s.WriteString("\n")
 
 	helpText := lipgloss.NewStyle().
-		Foreground(mutedColor).
+		Foreground(fgMuted).
 		Render("Press ") +
 		lipgloss.NewStyle().Foreground(primaryColor).Bold(true).Render("'o'") +
-		lipgloss.NewStyle().Foreground(mutedColor).Render(" to open admin panel")
+		lipgloss.NewStyle().Foreground(fgMuted).Render(" to open admin panel")
 	s.WriteString(helpText)
 
 	currentLines := strings.Count(s.String(), "\n")
