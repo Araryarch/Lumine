@@ -1,0 +1,148 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            output: lumine-linux-amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            output: lumine-linux-arm64
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            output: lumine-darwin-amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            output: lumine-darwin-arm64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            output: lumine-windows-amd64.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -ldflags="-s -w" -o ${{ matrix.output }} .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: ${{ matrix.output }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Create checksums
+        run: |
+          cd artifacts
+          for dir in */; do
+            cd "$dir"
+            sha256sum * > checksums.txt
+            cd ..
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/**/*
+          body: |
+            ## Lumine Release
+            
+            ### Installation
+            
+            #### Linux
+            ```bash
+            # AMD64
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/lumine-linux-amd64
+            chmod +x lumine-linux-amd64
+            sudo mv lumine-linux-amd64 /usr/local/bin/lumine
+            
+            # ARM64
+            wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/lumine-linux-arm64
+            chmod +x lumine-linux-arm64
+            sudo mv lumine-linux-arm64 /usr/local/bin/lumine
+            ```
+            
+            #### macOS
+            ```bash
+            # Intel
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/lumine-darwin-amd64 -o lumine
+            chmod +x lumine
+            sudo mv lumine /usr/local/bin/
+            
+            # Apple Silicon (M1/M2/M3)
+            curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/lumine-darwin-arm64 -o lumine
+            chmod +x lumine
+            sudo mv lumine /usr/local/bin/
+            ```
+            
+            #### Windows
+            Download `lumine-windows-amd64.exe` and add to your PATH.
+            
+            Or use PowerShell:
+            ```powershell
+            Invoke-WebRequest -Uri "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/lumine-windows-amd64.exe" -OutFile "lumine.exe"
+            Move-Item lumine.exe C:\Windows\System32\
+            ```
+            
+            ### What's Changed
+            See [CHANGELOG.md](CHANGELOG.md) for details.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
+      - name: Build Cleanup Tool
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -ldflags="-s -w" -o lumine-cleanup-${{ matrix.output }} ./cmd/cleanup
+
+      - name: Upload cleanup artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lumine-cleanup-${{ matrix.output }}
+          path: lumine-cleanup-${{ matrix.output }}

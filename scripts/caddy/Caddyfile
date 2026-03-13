@@ -1,0 +1,50 @@
+# Lumine Caddy Configuration
+# This is the default Caddyfile for Lumine projects
+
+# Global options
+{
+	# Disable automatic HTTPS in development
+	auto_https off
+	
+	# Admin API
+	admin off
+}
+
+# Default site
+:80 {
+	# Root directory
+	root * /var/www/html
+	
+	# Enable file server
+	file_server
+	
+	# PHP support (if PHP-FPM is available)
+	php_fastcgi php:9000
+	
+	# Gzip compression
+	encode gzip
+	
+	# Logging
+	log {
+		output stdout
+		format console
+	}
+}
+
+# Example Laravel site
+# myapp.test {
+#     root * /var/www/myapp/public
+#     php_fastcgi php:9000
+#     file_server
+#     encode gzip
+# }
+
+# Example Next.js site (reverse proxy)
+# frontend.test {
+#     reverse_proxy localhost:3000
+# }
+
+# Example API site
+# api.test {
+#     reverse_proxy localhost:8000
+# }

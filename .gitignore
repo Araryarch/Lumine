@@ -1,0 +1,55 @@
+lumine
+lumine-cleanup
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# Build artifacts
+dist/
+build/
+bin/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config (keep template)
+.lumine/
+!.lumine/config.example.yaml
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Dependencies
+vendor/
+
+# Coverage
+*.cover
+coverage.txt
+coverage.html
+
+# Debug
+debug
+__debug_bin
+
+# Backups
+*-backup-*.sql
+lumine-backup-*.sql
