@@ -14,6 +14,24 @@ var commonVersions = map[string][]string{
 		"8.0-fpm", "8.0-apache", "8.0-cli",
 		"7.4-fpm", "7.4-apache", "7.4-cli",
 	},
+	"node": {
+		"21", "20", "20-alpine", "18", "18-alpine", "16", "16-alpine", "14",
+	},
+	"python": {
+		"3.12", "3.12-slim", "3.11", "3.11-slim", "3.10", "3.10-slim", "3.9", "3.9-slim",
+	},
+	"rust": {
+		"1.75", "1.74", "1.73", "latest", "alpine",
+	},
+	"bun": {
+		"1.0", "latest", "alpine",
+	},
+	"deno": {
+		"1.39", "1.38", "latest", "alpine",
+	},
+	"go": {
+		"1.21", "1.21-alpine", "1.20", "1.20-alpine", "1.19", "latest",
+	},
 	"mysql": {
 		"8.3", "8.2", "8.1", "8.0", "5.7", "5.6",
 	},

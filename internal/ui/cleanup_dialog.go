@@ -17,171 +17,241 @@ const (
 )
 
 func (m model) renderCleanupDialog() string {
-	var s strings.Builder
-
-	// Create overlay
-	overlayWidth := 70
-	overlayHeight := 25
-
-	// Center the overlay
-	leftPadding := (m.width - overlayWidth) / 2
-	topPadding := (m.height - overlayHeight) / 2
-
-	// Add top padding
-	for i := 0; i < topPadding; i++ {
-		s.WriteString("\n")
-	}
-
-	// Overlay style
-	overlayStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(errorColor).
-		Padding(1, 2).
-		Width(overlayWidth).
-		Height(overlayHeight).
-		Background(bgColor)
+	// Modal dimensions
+	modalWidth := 75
 
 	var content strings.Builder
 
-	// Header
-	header := lipgloss.NewStyle().
-		Bold(true).
+	// Title with icon
+	titleStyle := lipgloss.NewStyle().
 		Foreground(errorColor).
-		Render("⚠️  Cleanup Options")
-	content.WriteString(header + "\n\n")
+		Bold(true).
+		Align(lipgloss.Center).
+		Width(modalWidth - 4)
 
-	// Warning
-	warning := lipgloss.NewStyle().
+	title := titleStyle.Render("🗑️  Cleanup Options")
+	content.WriteString(title + "\n")
+
+	// Divider
+	divider := lipgloss.NewStyle().
+		Foreground(borderColor).
+		Render(strings.Repeat("─", modalWidth-4))
+	content.WriteString(divider + "\n\n")
+
+	// Warning box
+	warningBox := lipgloss.NewStyle().
 		Foreground(warningColor).
-		Render("Select what to remove:")
-	content.WriteString(warning + "\n\n")
+		Background(surfaceColor).
+		Padding(0, 2).
+		Align(lipgloss.Center).
+		Width(modalWidth - 8).
+		Bold(true).
+		Render("⚠️  Select what to remove  ⚠️")
+	content.WriteString(warningBox + "\n\n")
 
-	// Options
+	// Options with better styling
 	options := []struct {
 		name        string
 		description string
+		icon        string
 		danger      bool
 	}{
-		{"Remove Container", "Stop and remove this container only", false},
-		{"Remove with Volume", "Remove container and its data volume", true},
-		{"Remove All Containers", "Remove all Lumine containers", true},
-		{"Nuclear Cleanup", "Remove EVERYTHING (containers, volumes, networks)", true},
+		{"Remove Container", "Stop and remove this container only", "📦", false},
+		{"Remove with Volume", "Remove container and its data volume", "💾", true},
+		{"Remove All Containers", "Remove all Lumine containers", "🗂️", true},
+		{"Nuclear Cleanup", "Remove EVERYTHING (containers, volumes, networks)", "💣", true},
 	}
 
 	for i, opt := range options {
-		var line string
-		cursor := "  "
-		if m.cleanupCursor == i {
-			cursor = "▶ "
-		}
+		var line strings.Builder
 
-		icon := "🗑️ "
-		if opt.danger {
-			icon = "💣 "
-		}
-
-		optText := fmt.Sprintf("%s%s%s", cursor, icon, opt.name)
+		// Selection indicator
 		if m.cleanupCursor == i {
-			line = selectedItemStyle.Width(overlayWidth - 6).Render(optText)
+			line.WriteString(lipgloss.NewStyle().
+				Foreground(errorColor).
+				Bold(true).
+				Render("▶ "))
 		} else {
-			line = normalItemStyle.Render(optText)
+			line.WriteString("  ")
 		}
 
-		content.WriteString(line + "\n")
-		
+		// Icon
+		line.WriteString(opt.icon + " ")
+
+		// Option name
+		nameStyle := lipgloss.NewStyle().
+			Foreground(fgColor).
+			Bold(true)
+		if opt.danger {
+			nameStyle = nameStyle.Foreground(errorColor)
+		}
+		line.WriteString(nameStyle.Render(opt.name))
+
+		lineStr := line.String()
+
+		// Highlight selected
+		if m.cleanupCursor == i {
+			lineStr = lipgloss.NewStyle().
+				Background(lipgloss.Color("#313244")).
+				Foreground(fgColor).
+				Width(modalWidth - 6).
+				Padding(0, 1).
+				Bold(true).
+				Render(lineStr)
+		} else {
+			lineStr = lipgloss.NewStyle().
+				Width(modalWidth - 6).
+				Padding(0, 1).
+				Render(lineStr)
+		}
+
+		content.WriteString(lineStr + "\n")
+
 		// Description
-		desc := lipgloss.NewStyle().
+		descStyle := lipgloss.NewStyle().
 			Foreground(mutedColor).
-			Render("   " + opt.description)
-		content.WriteString(desc + "\n\n")
+			Italic(true).
+			Width(modalWidth - 10).
+			Padding(0, 0, 0, 4)
+		content.WriteString(descStyle.Render(opt.description) + "\n\n")
 	}
 
 	// Current selection info
 	if m.selectedService != nil {
 		content.WriteString("\n")
-		info := lipgloss.NewStyle().
+		infoBox := lipgloss.NewStyle().
 			Foreground(infoColor).
+			Background(surfaceColor).
+			Padding(0, 2).
+			Align(lipgloss.Center).
+			Width(modalWidth - 8).
 			Render(fmt.Sprintf("Selected: %s", m.selectedService.Name))
-		content.WriteString(info + "\n")
+		content.WriteString(infoBox + "\n")
 	}
 
-	// Help
-	content.WriteString("\n")
+	// Bottom divider
+	content.WriteString("\n" + divider + "\n")
+
+	// Help text with icons
+	helpItems := []string{
+		lipgloss.NewStyle().Foreground(infoColor).Render("↑↓") +
+			lipgloss.NewStyle().Foreground(mutedColor).Render(" navigate"),
+		lipgloss.NewStyle().Foreground(errorColor).Render("enter") +
+			lipgloss.NewStyle().Foreground(mutedColor).Render(" confirm"),
+		lipgloss.NewStyle().Foreground(successColor).Render("esc") +
+			lipgloss.NewStyle().Foreground(mutedColor).Render(" cancel"),
+	}
+
 	helpText := lipgloss.NewStyle().
-		Foreground(infoColor).
-		Render("↑/↓: Navigate  Enter: Confirm  Esc: Cancel")
+		Align(lipgloss.Center).
+		Width(modalWidth - 4).
+		Render(strings.Join(helpItems, "  •  "))
 	content.WriteString(helpText)
 
-	overlay := overlayStyle.Render(content.String())
+	// Modal box
+	modalBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(errorColor).
+		Background(bgColor).
+		Padding(2, 2).
+		Width(modalWidth)
 
-	// Add left padding
-	lines := strings.Split(overlay, "\n")
-	for _, line := range lines {
-		s.WriteString(strings.Repeat(" ", leftPadding) + line + "\n")
-	}
+	modal := modalBox.Render(content.String())
 
-	return s.String()
+	// Center modal on screen with overlay
+	modalWithPosition := lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		modal,
+		lipgloss.WithWhitespaceChars("░"),
+		lipgloss.WithWhitespaceForeground(lipgloss.Color("#45475a")),
+	)
+
+	return modalWithPosition
 }
 
 func (m model) renderConfirmDialog(message string) string {
-	var s strings.Builder
-
-	// Create overlay
-	overlayWidth := 60
-	overlayHeight := 12
-
-	// Center the overlay
-	leftPadding := (m.width - overlayWidth) / 2
-	topPadding := (m.height - overlayHeight) / 2
-
-	// Add top padding
-	for i := 0; i < topPadding; i++ {
-		s.WriteString("\n")
-	}
-
-	// Overlay style
-	overlayStyle := lipgloss.NewStyle().
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(errorColor).
-		Padding(2, 3).
-		Width(overlayWidth).
-		Height(overlayHeight).
-		Background(bgColor)
+	// Modal dimensions
+	modalWidth := 65
 
 	var content strings.Builder
 
-	// Icon and message
-	icon := lipgloss.NewStyle().
+	// Title with icon
+	titleStyle := lipgloss.NewStyle().
 		Foreground(errorColor).
 		Bold(true).
-		Render("⚠️  WARNING")
-	content.WriteString(icon + "\n\n")
+		Align(lipgloss.Center).
+		Width(modalWidth - 4)
 
-	msg := lipgloss.NewStyle().
+	title := titleStyle.Render("⚠️  WARNING  ⚠️")
+	content.WriteString(title + "\n")
+
+	// Divider
+	divider := lipgloss.NewStyle().
+		Foreground(borderColor).
+		Render(strings.Repeat("─", modalWidth-4))
+	content.WriteString(divider + "\n\n")
+
+	// Message box
+	messageBox := lipgloss.NewStyle().
 		Foreground(fgColor).
+		Background(surfaceColor).
+		Padding(1, 2).
+		Align(lipgloss.Center).
+		Width(modalWidth - 8).
 		Render(message)
-	content.WriteString(msg + "\n\n")
+	content.WriteString(messageBox + "\n\n")
 
 	// Confirmation prompt
-	prompt := lipgloss.NewStyle().
+	promptStyle := lipgloss.NewStyle().
 		Foreground(warningColor).
-		Bold(true).
-		Render("Type 'yes' to confirm: ")
-	content.WriteString(prompt)
+		Bold(true)
+	content.WriteString(promptStyle.Render("Type 'yes' to confirm:") + "\n\n")
 
-	// Input field
-	input := lipgloss.NewStyle().
+	// Input field with box
+	inputBox := lipgloss.NewStyle().
 		Foreground(infoColor).
+		Background(lipgloss.Color("#313244")).
+		Padding(0, 2).
+		Width(modalWidth - 8).
+		Align(lipgloss.Center).
 		Render(m.confirmInput + "█")
-	content.WriteString(input)
+	content.WriteString(inputBox + "\n\n")
 
-	overlay := overlayStyle.Render(content.String())
+	// Bottom divider
+	content.WriteString(divider + "\n")
 
-	// Add left padding
-	lines := strings.Split(overlay, "\n")
-	for _, line := range lines {
-		s.WriteString(strings.Repeat(" ", leftPadding) + line + "\n")
-	}
+	// Help text
+	helpText := lipgloss.NewStyle().
+		Foreground(mutedColor).
+		Align(lipgloss.Center).
+		Width(modalWidth - 4).
+		Render("Type 'yes' and press enter to confirm  •  esc to cancel")
+	content.WriteString(helpText)
 
-	return s.String()
+	// Modal box
+	modalBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(errorColor).
+		Background(bgColor).
+		Padding(2, 2).
+		Width(modalWidth)
+
+	modal := modalBox.Render(content.String())
+
+	// Center modal on screen with overlay
+	modalWithPosition := lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		modal,
+		lipgloss.WithWhitespaceChars("░"),
+		lipgloss.WithWhitespaceForeground(lipgloss.Color("#45475a")),
+	)
+
+	return modalWithPosition
 }
+

@@ -3,16 +3,24 @@ package ui
 import "github.com/charmbracelet/lipgloss"
 
 var (
-	// Colors
-	primaryColor   = lipgloss.Color("#7D56F4")
-	secondaryColor = lipgloss.Color("#F780E2")
-	successColor   = lipgloss.Color("#00D787")
-	errorColor     = lipgloss.Color("#FF5F87")
-	warningColor   = lipgloss.Color("#FFD700")
-	infoColor      = lipgloss.Color("#5FD7FF")
-	mutedColor     = lipgloss.Color("#626262")
-	bgColor        = lipgloss.Color("#1a1b26")
-	fgColor        = lipgloss.Color("#c0caf5")
+	// Catppuccin Mocha color scheme
+	primaryColor   = lipgloss.Color("#89b4fa")  // Blue
+	secondaryColor = lipgloss.Color("#cba6f7")  // Mauve
+	successColor   = lipgloss.Color("#a6e3a1")  // Green
+	errorColor     = lipgloss.Color("#f38ba8")  // Red
+	warningColor   = lipgloss.Color("#f9e2af")  // Yellow
+	infoColor      = lipgloss.Color("#94e2d5")  // Teal
+	mutedColor     = lipgloss.Color("#6c7086")  // Overlay0
+	bgColor        = lipgloss.Color("#1e1e2e")  // Base
+	fgColor        = lipgloss.Color("#cdd6f4")  // Text
+	borderColor    = lipgloss.Color("#45475a")  // Surface1
+	surfaceColor   = lipgloss.Color("#313244")  // Surface0
+	
+	// Additional Catppuccin colors
+	peachColor     = lipgloss.Color("#fab387")  // Peach
+	pinkColor      = lipgloss.Color("#f5c2e7")  // Pink
+	lavenderColor  = lipgloss.Color("#b4befe")  // Lavender
+	sapphireColor  = lipgloss.Color("#74c7ec")  // Sapphire
 
 	// Base styles
 	baseStyle = lipgloss.NewStyle().
@@ -22,28 +30,27 @@ var (
 	// Title bar
 	titleStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("#FFFFFF")).
+			Foreground(lipgloss.Color("#1a1b26")).
 			Background(primaryColor).
-			Padding(0, 1)
+			Padding(0, 2).
+			Width(100)
 
-	// Panel styles
+	// Panel styles with better borders
 	panelStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(primaryColor).
+			BorderForeground(borderColor).
 			Padding(1, 2).
-			MarginRight(1).
-			MarginTop(1)
+			MarginRight(1)
 
 	activePanelStyle = lipgloss.NewStyle().
-				Border(lipgloss.RoundedBorder()).
-				BorderForeground(secondaryColor).
+				Border(lipgloss.ThickBorder()).
+				BorderForeground(primaryColor).
 				Padding(1, 2).
-				MarginRight(1).
-				MarginTop(1)
+				MarginRight(1)
 
 	// List item styles
 	selectedItemStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FFFFFF")).
+				Foreground(bgColor).
 				Background(primaryColor).
 				Bold(true).
 				Padding(0, 1)
@@ -52,7 +59,7 @@ var (
 			Foreground(fgColor).
 			Padding(0, 1)
 
-	// Status styles
+	// Status styles with icons
 	runningStatusStyle = lipgloss.NewStyle().
 				Foreground(successColor).
 				Bold(true)
@@ -68,82 +75,108 @@ var (
 	headerStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(primaryColor).
+			Underline(true).
 			MarginBottom(1)
 
-	// Help styles
+	subHeaderStyle = lipgloss.NewStyle().
+			Foreground(infoColor).
+			Italic(true)
+
+	// Help styles - more prominent
 	helpStyle = lipgloss.NewStyle().
 			Foreground(mutedColor).
+			Background(surfaceColor).
+			Padding(0, 1).
 			MarginTop(1)
 
 	helpKeyStyle = lipgloss.NewStyle().
-			Foreground(infoColor).
+			Foreground(lavenderColor).
 			Bold(true)
+
+	helpDescStyle = lipgloss.NewStyle().
+			Foreground(fgColor)
 
 	// Info box
 	infoBoxStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(infoColor).
-			Padding(0, 1).
+			Padding(1, 2).
 			MarginTop(1)
 
-	// Status bar
+	warningBoxStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(warningColor).
+			Padding(1, 2).
+			MarginTop(1)
+
+	errorBoxStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(errorColor).
+			Padding(1, 2).
+			MarginTop(1)
+
+	// Status bar - more prominent
 	statusBarStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
+			Foreground(bgColor).
 			Background(primaryColor).
-			Padding(0, 1).
-			MarginTop(1)
+			Padding(0, 2).
+			Bold(true)
 
-	// Service type badges
+	// Divider
+	dividerStyle = lipgloss.NewStyle().
+			Foreground(borderColor)
+
+	// Service type badges with Catppuccin colors
 	phpBadge = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#777BB3")).
+			Foreground(bgColor).
+			Background(lavenderColor).
 			Padding(0, 1).
 			Bold(true)
 
 	mysqlBadge = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#00758F")).
+			Foreground(bgColor).
+			Background(sapphireColor).
 			Padding(0, 1).
 			Bold(true)
 
 	nginxBadge = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#009639")).
+			Foreground(bgColor).
+			Background(successColor).
 			Padding(0, 1).
 			Bold(true)
 
 	redisBadge = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#DC382D")).
+			Foreground(bgColor).
+			Background(errorColor).
 			Padding(0, 1).
 			Bold(true)
 
 	postgresBadge = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FFFFFF")).
-				Background(lipgloss.Color("#336791")).
+				Foreground(bgColor).
+				Background(primaryColor).
 				Padding(0, 1).
 				Bold(true)
 
 	mariadbBadge = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#003545")).
+			Foreground(bgColor).
+			Background(infoColor).
 			Padding(0, 1).
 			Bold(true)
 
 	apacheBadge = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#D22128")).
+			Foreground(bgColor).
+			Background(peachColor).
 			Padding(0, 1).
 			Bold(true)
 
 	mongoBadge = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#47A248")).
+			Foreground(bgColor).
+			Background(successColor).
 			Padding(0, 1).
 			Bold(true)
 
 	defaultBadge = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
+			Foreground(fgColor).
 			Background(mutedColor).
 			Padding(0, 1).
 			Bold(true)
