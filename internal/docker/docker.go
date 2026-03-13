@@ -74,7 +74,8 @@ func (m *Manager) StartService(ctx context.Context, service config.Service) erro
 
 func (m *Manager) StopService(ctx context.Context, serviceName string) error {
 	containerName := fmt.Sprintf("lumine-%s", serviceName)
-	return m.client.ContainerStop(ctx, containerName, container.StopOptions{})
+	timeout := 10
+	return m.client.ContainerStop(ctx, containerName, container.StopOptions{Timeout: &timeout})
 }
 
 func (m *Manager) ListContainers(ctx context.Context) ([]types.Container, error) {

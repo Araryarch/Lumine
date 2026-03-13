@@ -38,10 +38,11 @@ func (m *Manager) StopAllContainers(ctx context.Context) error {
 		return err
 	}
 
-	for _, container := range containers {
-		if container.State == "running" {
-			if err := m.client.ContainerStop(ctx, container.ID, container.StopOptions{}); err != nil {
-				return fmt.Errorf("failed to stop container %s: %w", container.Names[0], err)
+	for _, cont := range containers {
+		if cont.State == "running" {
+			timeout := 10
+			if err := m.client.ContainerStop(ctx, cont.ID, container.StopOptions{Timeout: &timeout}); err != nil {
+				return fmt.Errorf("failed to stop container %s: %w", cont.Names[0], err)
 			}
 		}
 	}
@@ -69,12 +70,12 @@ func (m *Manager) RemoveAllContainers(ctx context.Context, force bool) error {
 		return err
 	}
 
-	for _, container := range containers {
-		if err := m.client.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{
+	for _, cont := range containers {
+		if err := m.client.ContainerRemove(ctx, cont.ID, types.ContainerRemoveOptions{
 			Force:         force,
 			RemoveVolumes: false,
 		}); err != nil {
-			return fmt.Errorf("failed to remove container %s: %w", container.Names[0], err)
+			return fmt.Errorf("failed to remove container %s: %w", cont.Names[0], err)
 		}
 	}
 

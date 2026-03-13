@@ -182,6 +182,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
+		// Cleanup dialog navigation
+		if m.showCleanupDialog {
+			switch msg.String() {
+			case "esc":
+				m.showCleanupDialog = false
+				m.cleanupCursor = 0
+				m.selectedService = nil
+			case "up", "k":
+				if m.cleanupCursor > 0 {
+					m.cleanupCursor--
+				}
+			case "down", "j":
+				if m.cleanupCursor < 3 {
+					m.cleanupCursor++
+				}
+			case "enter":
+				return m, m.performCleanup()
+			}
+			return m, nil
+		}
+
 		// Version list navigation
 		if m.showVersionList {
 			switch msg.String() {
@@ -466,4 +487,72 @@ func (m model) View() string {
 	s.WriteString(help)
 
 	return baseStyle.Render(s.String())
+}
+
+func (m *model) performCleanup() tea.Cmd {
+	return func() tea.Msg {
+		ctx := context.Background()
+		
+		switch m.cleanupCursor {
+		case 0: // Remove Container
+			if m.selectedService != nil {
+				if err := m.docker.RemoveContainer(ctx, m.selectedService.Name); err != nil {
+					m.logs = append(m.logs, fmt.Sprintf("Error removing %s: %v", m.selectedService.Name, err))
+					m.statusMessage = fmt.Sprintf("Failed to remove %s", m.selectedService.Name)
+				} else {
+					m.logs = append(m.logs, fmt.Sprintf("Removed container %s", m.selectedService.Name))
+					m.statusMessage = fmt.Sprintf("Removed %s successfully", m.selectedService.Name)
+				}
+			}
+			
+		case 1: // Remove with Volume
+			if m.selectedService != nil {
+				// Stop and remove container
+				m.docker.StopService(ctx, m.selectedService.Name)
+				if err := m.docker.RemoveContainer(ctx, m.selectedService.Name); err != nil {
+					m.logs = append(m.logs, fmt.Sprintf("Error removing %s: %v", m.selectedService.Name, err))
+				}
+				
+				// Remove volume
+				volumeName := fmt.Sprintf("lumine_%s_data", m.selectedService.Name)
+				if err := m.docker.RemoveVolume(ctx, volumeName); err != nil {
+					m.logs = append(m.logs, fmt.Sprintf("Error removing volume: %v", err))
+				} else {
+					m.logs = append(m.logs, fmt.Sprintf("Removed %s and its volume", m.selectedService.Name))
+					m.statusMessage = fmt.Sprintf("Removed %s with volume", m.selectedService.Name)
+				}
+			}
+			
+		case 2: // Remove All Containers
+			if err := m.docker.RemoveAllContainers(ctx, true); err != nil {
+				m.logs = append(m.logs, fmt.Sprintf("Error removing containers: %v", err))
+				m.statusMessage = "Failed to remove all containers"
+			} else {
+				m.logs = append(m.logs, "Removed all Lumine containers")
+				m.statusMessage = "All containers removed"
+			}
+			
+		case 3: // Nuclear Cleanup
+			opts := docker.CleanupOptions{
+				RemoveContainers: true,
+				RemoveVolumes:    true,
+				RemoveNetworks:   true,
+				Force:            true,
+			}
+			
+			if err := m.docker.Cleanup(ctx, opts); err != nil {
+				m.logs = append(m.logs, fmt.Sprintf("Error during cleanup: %v", err))
+				m.statusMessage = "Cleanup failed"
+			} else {
+				m.logs = append(m.logs, "Nuclear cleanup completed - all Lumine resources removed")
+				m.statusMessage = "Complete cleanup successful"
+			}
+		}
+		
+		m.showCleanupDialog = false
+		m.cleanupCursor = 0
+		m.selectedService = nil
+		
+		return m.checkStatus()()
+	}
 }

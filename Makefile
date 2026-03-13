@@ -42,30 +42,19 @@ build: deps ## Build the binary
 	@$(GO) build $(GOFLAGS) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) .
 	@echo "$(GREEN)✓ Build complete: $(BUILD_DIR)/$(BINARY_NAME)$(NC)"
 
-build-cleanup: ## Build cleanup tool
-	@echo "$(CYAN)Building cleanup tool...$(NC)"
-	@mkdir -p $(BUILD_DIR)
-	@$(GO) build $(GOFLAGS) $(LDFLAGS) -o $(BUILD_DIR)/lumine-cleanup ./cmd/cleanup
-	@echo "$(GREEN)✓ Cleanup tool built: $(BUILD_DIR)/lumine-cleanup$(NC)"
-
 build-all: ## Build for all platforms
 	@echo "$(CYAN)Building for all platforms...$(NC)"
 	@mkdir -p $(BUILD_DIR)
 	@echo "  → Linux AMD64..."
 	@GOOS=linux GOARCH=amd64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 .
-	@GOOS=linux GOARCH=amd64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/lumine-cleanup-linux-amd64 ./cmd/cleanup
 	@echo "  → Linux ARM64..."
 	@GOOS=linux GOARCH=arm64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 .
-	@GOOS=linux GOARCH=arm64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/lumine-cleanup-linux-arm64 ./cmd/cleanup
 	@echo "  → macOS AMD64..."
 	@GOOS=darwin GOARCH=amd64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-amd64 .
-	@GOOS=darwin GOARCH=amd64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/lumine-cleanup-darwin-amd64 ./cmd/cleanup
 	@echo "  → macOS ARM64..."
 	@GOOS=darwin GOARCH=arm64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-arm64 .
-	@GOOS=darwin GOARCH=arm64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/lumine-cleanup-darwin-arm64 ./cmd/cleanup
 	@echo "  → Windows AMD64..."
 	@GOOS=windows GOARCH=amd64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe .
-	@GOOS=windows GOARCH=amd64 $(GO) build $(LDFLAGS) -o $(BUILD_DIR)/lumine-cleanup-windows-amd64.exe ./cmd/cleanup
 	@echo "$(GREEN)✓ All builds complete!$(NC)"
 
 # Installation
@@ -74,21 +63,9 @@ install: build ## Install the binary to system
 	@sudo cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/
 	@echo "$(GREEN)✓ Installation complete!$(NC)"
 
-install-cleanup: build-cleanup ## Install cleanup tool
-	@echo "$(CYAN)Installing cleanup tool to $(INSTALL_DIR)...$(NC)"
-	@sudo cp $(BUILD_DIR)/lumine-cleanup $(INSTALL_DIR)/
-	@echo "$(GREEN)✓ Cleanup tool installed!$(NC)"
-
-install-all: build build-cleanup ## Install both lumine and cleanup tool
-	@echo "$(CYAN)Installing all tools to $(INSTALL_DIR)...$(NC)"
-	@sudo cp $(BUILD_DIR)/$(BINARY_NAME) $(INSTALL_DIR)/
-	@sudo cp $(BUILD_DIR)/lumine-cleanup $(INSTALL_DIR)/
-	@echo "$(GREEN)✓ All tools installed!$(NC)"
-
 uninstall: ## Uninstall the binary from system
 	@echo "$(YELLOW)Uninstalling...$(NC)"
 	@sudo rm -f $(INSTALL_DIR)/$(BINARY_NAME)
-	@sudo rm -f $(INSTALL_DIR)/lumine-cleanup
 	@echo "$(GREEN)✓ Uninstall complete!$(NC)"
 
 # Dependencies
@@ -288,19 +265,6 @@ clean-all: clean db-clean docker-clean ## Clean everything including Docker
 
 clean-containers: containers-prune ## Alias for containers-prune
 	@echo "$(GREEN)✓ Containers cleaned!$(NC)"
-
-cleanup-interactive: build-cleanup ## Run interactive cleanup tool
-	@echo "$(CYAN)Starting interactive cleanup...$(NC)"
-	@$(BUILD_DIR)/lumine-cleanup
-
-cleanup-stop: build-cleanup ## Stop all containers using cleanup tool
-	@echo "1" | $(BUILD_DIR)/lumine-cleanup
-
-cleanup-remove: build-cleanup ## Remove containers using cleanup tool
-	@echo "2" | $(BUILD_DIR)/lumine-cleanup
-
-cleanup-nuclear: build-cleanup ## Nuclear cleanup using cleanup tool
-	@echo "4" | $(BUILD_DIR)/lumine-cleanup
 
 clean-everything: ## Nuclear option - remove EVERYTHING (containers, volumes, networks, builds)
 	@echo "$(RED)⚠️  NUCLEAR OPTION: This will remove EVERYTHING!$(NC)"
