@@ -7,9 +7,9 @@ import (
 
 	"github.com/awesome-gocui/gocui"
 	"github.com/docker/docker/client"
-	"github.com/yourusername/lumine/pkg/config"
-	"github.com/yourusername/lumine/pkg/projects"
-	"github.com/yourusername/lumine/pkg/services"
+	"github.com/Araryarch/lumine/pkg/config"
+	"github.com/Araryarch/lumine/pkg/projects"
+	"github.com/Araryarch/lumine/pkg/services"
 )
 
 type ViewMode string

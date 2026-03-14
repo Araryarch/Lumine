@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/yourusername/lumine/pkg/config"
+	"github.com/Araryarch/lumine/pkg/config"
 )
 
 type ProjectType string

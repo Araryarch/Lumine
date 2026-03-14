@@ -6,8 +6,8 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/jesseduffield/gocui"
-	"github.com/yourusername/lumine/pkg/config"
-	"github.com/yourusername/lumine/pkg/gui"
+	"github.com/Araryarch/lumine/pkg/config"
+	"github.com/Araryarch/lumine/pkg/gui"
 )
 
 type App struct {

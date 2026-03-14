@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/docker/docker/client"
-	"github.com/yourusername/lumine/pkg/config"
-	"github.com/yourusername/lumine/pkg/docker"
+	"github.com/Araryarch/lumine/pkg/config"
+	"github.com/Araryarch/lumine/pkg/docker"
 )
 
 type ServiceStatus struct {
