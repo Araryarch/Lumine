@@ -111,3 +111,8 @@ func (r *ServiceRepository) RestartAll() error {
 	}
 	return nil
 }
+
+func (r *ServiceRepository) GetLogs(name string, tail string) (string, error) {
+	containerName := "lumine-" + name
+	return r.docker.GetLogs(containerName, tail)
+}

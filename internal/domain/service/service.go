@@ -25,4 +25,5 @@ type Repository interface {
 	StartAll() error
 	StopAll() error
 	RestartAll() error
+	GetLogs(name string, tail string) (string, error)
 }

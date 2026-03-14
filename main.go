@@ -6,13 +6,13 @@ import (
 	"log"
 	"os"
 
-	"github.com/jesseduffield/gocui"
-	appService "github.com/Araryarch/lumine/internal/application/service"
 	appProject "github.com/Araryarch/lumine/internal/application/project"
+	appService "github.com/Araryarch/lumine/internal/application/service"
 	"github.com/Araryarch/lumine/internal/infrastructure/config"
 	"github.com/Araryarch/lumine/internal/infrastructure/docker"
 	"github.com/Araryarch/lumine/internal/infrastructure/repository"
 	"github.com/Araryarch/lumine/internal/presentation/tui"
+	"github.com/jesseduffield/gocui"
 )
 
 func main() {
@@ -43,26 +43,28 @@ func main() {
 	serviceSvc := appService.NewService(serviceRepo)
 	projectSvc := appProject.NewService(projectRepo)
 
-	g, err := gocui.NewGui(gocui.OutputNormal, true)
-	if err != nil {
-		log.Fatalf("Error creating GUI: %v\n", err)
+	g := gocui.NewGui()
+	if err := g.Init(); err != nil {
+		log.Fatalf("Error initializing GUI: %v\n", err)
 	}
 	defer g.Close()
 
-	g.Highlight = true
+	// Enable mouse support
+	g.Mouse = true
 	g.Cursor = true
-	g.SelFgColor = gocui.ColorBlack
-	g.SelBgColor = gocui.ColorGreen
 
 	controller := tui.NewController(g, cfg, serviceSvc, projectSvc)
 
-	g.SetManagerFunc(controller.Layout)
+	g.SetLayout(controller.Layout)
 
 	if err := controller.SetupKeybindings(); err != nil {
 		log.Fatalf("Error setting up keybindings: %v\n", err)
 	}
 
-	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
+	// Start auto-refresh
+	controller.StartAutoRefresh(g)
+
+	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Fatalf("Error in main loop: %v\n", err)
 	}
 

@@ -53,3 +53,7 @@ func (s *Service) Stop(name string) error {
 func (s *Service) Restart(name string) error {
 	return s.repo.Restart(name)
 }
+
+func (s *Service) GetLogs(name string, tail string) (string, error) {
+	return s.repo.GetLogs(name, tail)
+}

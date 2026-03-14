@@ -70,6 +70,8 @@ func (c *Client) GetLogs(name string, tail string) (string, error) {
 		ShowStdout: true,
 		ShowStderr: true,
 		Tail:       tail,
+		Details:    true,
+		Timestamps: true,
 	}
 
 	logs, err := c.cli.ContainerLogs(c.ctx, name, options)
@@ -106,7 +108,26 @@ func (c *Client) ExecCommand(name string, cmd []string) error {
 		return err
 	}
 
-	return c.cli.ContainerExecStart(c.ctx, execID.ID, container.ExecStartOptions{})
+	return c.cli.ContainerExecStart(c.ctx, execID.ID, container.ExecStartOptions{
+		Detach: false,
+	})
+}
+
+func (c *Client) GetContainerInfo(name string) (*types.Container, error) {
+	containers, err := c.ListContainers()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, cont := range containers {
+		for _, n := range cont.Names {
+			if n == "/"+name || n == name {
+				return &cont, nil
+			}
+		}
+	}
+
+	return nil, nil
 }
 
 func IsRunning() bool {
