@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/awesome-gocui/gocui"
+	"github.com/jesseduffield/gocui"
 	"github.com/Araryarch/lumine/internal/domain/project"
 )
 

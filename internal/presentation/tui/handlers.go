@@ -3,7 +3,7 @@ package tui
 import (
 	"fmt"
 
-	"github.com/awesome-gocui/gocui"
+	"github.com/jesseduffield/gocui"
 )
 
 func (c *Controller) quit(g *gocui.Gui, v *gocui.View) error {
@@ -16,6 +16,10 @@ func (c *Controller) cursorDown(g *gocui.Gui, v *gocui.View) error {
 		maxIdx := len(c.menuItems) - 1
 		if c.selectedIdx < maxIdx {
 			c.selectedIdx++
+			menuView, _ := g.View("menu")
+			if menuView != nil {
+				c.renderMenu(menuView)
+			}
 		}
 	case ViewProjects:
 		if len(c.projectList) > 0 && c.selectedIdx < len(c.projectList)-1 {
@@ -36,6 +40,12 @@ func (c *Controller) cursorDown(g *gocui.Gui, v *gocui.View) error {
 func (c *Controller) cursorUp(g *gocui.Gui, v *gocui.View) error {
 	if c.selectedIdx > 0 {
 		c.selectedIdx--
+		if c.currentView == ViewMain {
+			menuView, _ := g.View("menu")
+			if menuView != nil {
+				c.renderMenu(menuView)
+			}
+		}
 	}
 	return nil
 }

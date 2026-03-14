@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"github.com/awesome-gocui/gocui"
+	"github.com/jesseduffield/gocui"
 	appProject "github.com/Araryarch/lumine/internal/application/project"
 	appService "github.com/Araryarch/lumine/internal/application/service"
 	"github.com/Araryarch/lumine/internal/domain/project"
@@ -73,6 +73,10 @@ func (c *Controller) Layout(g *gocui.Gui) error {
 		v.SelBgColor = gocui.ColorGreen
 		v.SelFgColor = gocui.ColorBlack
 		c.renderMenu(v)
+		
+		if _, err := g.SetCurrentView("menu"); err != nil {
+			return err
+		}
 	}
 
 	if v, err := g.SetView("main", menuWidth+1, 3, maxX-1, maxY-5, 0); err != nil {
@@ -102,10 +106,6 @@ func (c *Controller) Layout(g *gocui.Gui) error {
 		}
 		v.Frame = false
 		c.renderStatusBar(v)
-	}
-
-	if _, err := g.SetCurrentView("menu"); err != nil {
-		return err
 	}
 
 	return nil

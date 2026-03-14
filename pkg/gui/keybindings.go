@@ -3,7 +3,7 @@ package gui
 import (
 	"fmt"
 
-	"github.com/awesome-gocui/gocui"
+	"github.com/jesseduffield/gocui"
 )
 
 func (gc *GuiController) openProject(g *gocui.Gui, v *gocui.View) error {

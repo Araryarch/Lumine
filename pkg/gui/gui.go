@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/awesome-gocui/gocui"
+	"github.com/jesseduffield/gocui"
 	"github.com/docker/docker/client"
 	"github.com/Araryarch/lumine/pkg/config"
 	"github.com/Araryarch/lumine/pkg/projects"

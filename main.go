@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/awesome-gocui/gocui"
+	"github.com/jesseduffield/gocui"
 	appService "github.com/Araryarch/lumine/internal/application/service"
 	appProject "github.com/Araryarch/lumine/internal/application/project"
 	"github.com/Araryarch/lumine/internal/infrastructure/config"
