@@ -11,15 +11,14 @@ func (c *Controller) quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (c *Controller) cursorDown(g *gocui.Gui, v *gocui.View) error {
-	maxIdx := len(c.menuItems) - 1
-
 	switch c.currentView {
 	case ViewMain:
+		maxIdx := len(c.menuItems) - 1
 		if c.selectedIdx < maxIdx {
 			c.selectedIdx++
 		}
 	case ViewProjects:
-		if c.selectedIdx < len(c.projectList)-1 {
+		if len(c.projectList) > 0 && c.selectedIdx < len(c.projectList)-1 {
 			c.selectedIdx++
 		}
 	case ViewCreateProject:
@@ -27,11 +26,10 @@ func (c *Controller) cursorDown(g *gocui.Gui, v *gocui.View) error {
 			c.selectedIdx++
 		}
 	case ViewLogs:
-		if c.selectedIdx < len(c.serviceList)-1 {
+		if len(c.serviceList) > 0 && c.selectedIdx < len(c.serviceList)-1 {
 			c.selectedIdx++
 		}
 	}
-
 	return nil
 }
 

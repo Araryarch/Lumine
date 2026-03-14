@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"github.com/docker/docker/api/types"
@@ -96,7 +95,7 @@ func (c *Client) GetVersion() (string, error) {
 }
 
 func (c *Client) ExecCommand(name string, cmd []string) error {
-	execConfig := types.ExecConfig{
+	execConfig := container.ExecOptions{
 		AttachStdout: true,
 		AttachStderr: true,
 		Cmd:          cmd,
@@ -107,7 +106,7 @@ func (c *Client) ExecCommand(name string, cmd []string) error {
 		return err
 	}
 
-	return c.cli.ContainerExecStart(c.ctx, execID.ID, types.ExecStartCheck{})
+	return c.cli.ContainerExecStart(c.ctx, execID.ID, container.ExecStartOptions{})
 }
 
 func IsRunning() bool {

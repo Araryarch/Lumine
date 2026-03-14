@@ -17,7 +17,7 @@ func (c *Controller) renderMenu(v *gocui.View) {
 	v.Clear()
 	for i, item := range c.menuItems {
 		if i == c.selectedIdx && c.currentView == ViewMain {
-			fmt.Fprintf(v, "\033[1;34m▶ %s\033[0m\n", item)
+			fmt.Fprintf(v, "\033[1;32m▶ %s\033[0m\n", item)
 		} else {
 			fmt.Fprintf(v, "  %s\n", item)
 		}
@@ -129,15 +129,15 @@ func (c *Controller) renderProjects(v *gocui.View) {
 	for i, proj := range projectList {
 		prefix := "  "
 		if i == c.selectedIdx && c.currentView == ViewProjects {
-			prefix = "\033[1;34m▶\033[0m "
+			prefix = "\033[1;32m▶\033[0m "
 		}
-
+		
 		typeColor := "\033[1;32m"
 		switch proj.Type {
 		case project.TypeLaravel:
 			typeColor = "\033[1;31m"
 		case project.TypeWordPress:
-			typeColor = "\033[1;34m"
+			typeColor = "\033[1;36m"
 		}
 
 		fmt.Fprintf(v, "%s%-25s %s%-13s\033[0m %-40s\n",
@@ -180,7 +180,7 @@ func (c *Controller) renderCreateProject(v *gocui.View) {
 
 	for i, ptype := range projectTypes {
 		if i == c.selectedIdx && c.currentView == ViewCreateProject {
-			fmt.Fprintf(v, "\033[1;34m▶ %s\033[0m\n", ptype)
+			fmt.Fprintf(v, "\033[1;32m▶ %s\033[0m\n", ptype)
 		} else {
 			fmt.Fprintf(v, "  %s\n", ptype)
 		}
@@ -199,7 +199,7 @@ func (c *Controller) renderLogs(v *gocui.View) {
 	for i, svc := range c.serviceList {
 		prefix := "  "
 		if i == c.selectedIdx && c.currentView == ViewLogs {
-			prefix = "\033[1;34m▶\033[0m "
+			prefix = "\033[1;32m▶\033[0m "
 		}
 
 		statusColor := "\033[1;31m"

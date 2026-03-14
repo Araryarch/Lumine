@@ -52,7 +52,7 @@ func main() {
 	g.Highlight = true
 	g.Cursor = true
 	g.SelFgColor = gocui.ColorBlack
-	g.SelBgColor = gocui.ColorCyan
+	g.SelBgColor = gocui.ColorGreen
 
 	controller := tui.NewController(g, cfg, serviceSvc, projectSvc)
 

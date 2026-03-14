@@ -70,7 +70,7 @@ func (c *Controller) Layout(g *gocui.Gui) error {
 		}
 		v.Title = " Menu "
 		v.Highlight = true
-		v.SelBgColor = gocui.ColorCyan
+		v.SelBgColor = gocui.ColorGreen
 		v.SelFgColor = gocui.ColorBlack
 		c.renderMenu(v)
 	}
