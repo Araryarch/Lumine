@@ -1,18 +1,19 @@
-lumine
-lumine-cleanup
+# Binaries
+bin/
 *.exe
+*.exe~
 *.dll
 *.so
 *.dylib
-*.test
-*.out
-go.work
-go.work.sum
 
-# Build artifacts
-dist/
-build/
-bin/
+# Test binary
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
 
 # IDE
 .vscode/
@@ -25,31 +26,5 @@ bin/
 .DS_Store
 Thumbs.db
 
-# Config (keep template)
-.lumine/
-!.lumine/config.example.yaml
-
-# Logs
-*.log
-logs/
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-
-# Dependencies
-vendor/
-
-# Coverage
-*.cover
-coverage.txt
-coverage.html
-
-# Debug
-debug
-__debug_bin
-
-# Backups
-*-backup-*.sql
-lumine-backup-*.sql
+# Lumine specific
+lumine

@@ -3,88 +3,68 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
-	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"lumine/internal/config"
-	"lumine/internal/docker"
-	"lumine/internal/ui"
+	"github.com/awesome-gocui/gocui"
+	appService "github.com/Araryarch/lumine/internal/application/service"
+	appProject "github.com/Araryarch/lumine/internal/application/project"
+	"github.com/Araryarch/lumine/internal/infrastructure/config"
+	"github.com/Araryarch/lumine/internal/infrastructure/docker"
+	"github.com/Araryarch/lumine/internal/infrastructure/repository"
+	"github.com/Araryarch/lumine/internal/presentation/tui"
 )
 
 func main() {
-	// Validate Docker installation
-	fmt.Println("🔍 Checking Docker installation...")
-	validation := docker.ValidateDocker()
-
-	if !validation.DockerInstalled {
-		fmt.Println("❌ Docker is not installed!\n")
-		fmt.Println(docker.InstallDocker())
+	if !docker.IsRunning() {
+		fmt.Println("❌ Docker is not running")
+		fmt.Println("Please start Docker and try again")
 		os.Exit(1)
 	}
 
-	if !validation.DockerRunning {
-		fmt.Println("⚠️  Docker is installed but not running.")
-		fmt.Println("🚀 Attempting to start Docker...")
-
-		if err := docker.StartDocker(); err != nil {
-			fmt.Printf("❌ Failed to start Docker: %v\n", err)
-			fmt.Println("\nPlease start Docker manually and run 'lumine' again.")
-			os.Exit(1)
-		}
-
-		// Wait for Docker to start
-		fmt.Println("⏳ Waiting for Docker to start...")
-		for i := 0; i < 30; i++ {
-			time.Sleep(time.Second)
-			validation = docker.ValidateDocker()
-			if validation.DockerRunning {
-				break
-			}
-		}
-
-		if !validation.DockerRunning {
-			fmt.Println("❌ Docker failed to start. Please start it manually.")
-			os.Exit(1)
-		}
-	}
-
-	fmt.Printf("✅ Docker is running (version %s)\n", validation.DockerVersion)
-
-	if validation.ComposeInstalled {
-		fmt.Printf("✅ Docker Compose is available (version %s)\n", validation.ComposeVersion)
-	} else {
-		fmt.Println("⚠️  Docker Compose not found (optional)")
-	}
-
-	// Initialize config
-	fmt.Println("📝 Initializing configuration...")
-	if err := config.InitConfig(); err != nil {
-		fmt.Printf("❌ Error initializing config: %v\n", err)
-		os.Exit(1)
-	}
-
-	// Ensure Docker network
-	dockerMgr, err := docker.NewManager()
-	if err != nil {
-		fmt.Printf("❌ Error connecting to Docker: %v\n", err)
-		os.Exit(1)
-	}
+	fmt.Println("✓ Docker is running")
 
 	ctx := context.Background()
-	if err := dockerMgr.EnsureDockerNetwork(ctx); err != nil {
-		fmt.Printf("⚠️  Warning: Could not create Docker network: %v\n", err)
+
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Error loading config: %v\n", err)
 	}
 
-	fmt.Println("✅ Configuration ready")
-	fmt.Println("\n🌟 Starting Lumine...\n")
-
-	time.Sleep(time.Millisecond * 500)
-
-	// Start TUI
-	p := tea.NewProgram(ui.NewModel(), tea.WithAltScreen())
-	if _, err := p.Run(); err != nil {
-		fmt.Printf("Error running program: %v\n", err)
-		os.Exit(1)
+	dockerClient, err := docker.NewClient(ctx)
+	if err != nil {
+		log.Fatalf("Error creating Docker client: %v\n", err)
 	}
+	defer dockerClient.Close()
+
+	serviceRepo := repository.NewServiceRepository(dockerClient, cfg)
+	projectRepo := repository.NewProjectRepository()
+
+	serviceSvc := appService.NewService(serviceRepo)
+	projectSvc := appProject.NewService(projectRepo)
+
+	g, err := gocui.NewGui(gocui.OutputNormal, true)
+	if err != nil {
+		log.Fatalf("Error creating GUI: %v\n", err)
+	}
+	defer g.Close()
+
+	g.Highlight = true
+	g.Cursor = true
+	g.SelFgColor = gocui.ColorBlack
+	g.SelBgColor = gocui.ColorCyan
+
+	controller := tui.NewController(g, cfg, serviceSvc, projectSvc)
+
+	g.SetManagerFunc(controller.Layout)
+
+	if err := controller.SetupKeybindings(); err != nil {
+		log.Fatalf("Error setting up keybindings: %v\n", err)
+	}
+
+	if err := g.MainLoop(); err != nil && !gocui.IsQuit(err) {
+		log.Fatalf("Error in main loop: %v\n", err)
+	}
+
+	fmt.Println("\n✓ Goodbye!")
 }
