@@ -279,6 +279,13 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 		},
 		{
 			ViewName:    "lumineServers",
+			Key:         'v',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineServerVersionSwitch,
+			Description: "Switch Version",
+		},
+		{
+			ViewName:    "lumineServers",
 			Key:         's',
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleLumineServerStart,
@@ -415,6 +422,13 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleLumineDatabaseServiceEdit,
 			Description: "Edit Settings",
+		},
+		{
+			ViewName:    "lumineDatabases",
+			Key:         'v',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineDatabaseVersionSwitch,
+			Description: "Switch Version",
 		},
 		{
 			ViewName:    "lumineDatabases",

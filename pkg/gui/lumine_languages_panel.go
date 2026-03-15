@@ -50,17 +50,22 @@ func (gui *Gui) getLumineLanguagesPanel() *panels.SideListPanel[*lumine.Service]
 			return a.Name < b.Name
 		},
 		GetTableCells: func(service *lumine.Service) []string {
+			statusText := "inactive"
 			statusColor := color.FgRed
 			if service.Status == "running" {
+				statusText = "active"
 				statusColor = color.FgGreen
-			} else if service.Status == "stopped" {
-				statusColor = color.FgYellow
+			}
+
+			displayName := service.DisplayName
+			if displayName == "" {
+				displayName = service.Name
 			}
 
 			return []string{
-				utils.ColoredString(service.Name, color.FgCyan),
+				utils.ColoredString(displayName, color.FgCyan),
 				service.Version,
-				utils.ColoredString(service.Status, statusColor),
+				utils.ColoredString(statusText, statusColor),
 			}
 		},
 	}
@@ -83,21 +88,7 @@ func (gui *Gui) renderLumineLanguageVersions(service *lumine.Service) tasks.Task
 	return gui.NewSimpleRenderStringTask(func() string {
 		output := utils.ColoredString("Available Versions:\n\n", color.FgYellow)
 		
-		var versions []string
-		serviceType := string(service.Type)
-		
-		if serviceType == "php-fpm" || strings.Contains(serviceType, "php") {
-			versions = []string{"7.4", "8.0", "8.1", "8.2", "8.3"}
-			output += "PHP Versions:\n"
-		} else if serviceType == "node" || strings.Contains(serviceType, "node") {
-			versions = []string{"16", "18", "20", "21", "22"}
-			output += "Node.js Versions:\n"
-		} else if serviceType == "python" || strings.Contains(serviceType, "python") {
-			versions = []string{"3.9", "3.10", "3.11", "3.12"}
-			output += "Python Versions:\n"
-		} else {
-			return "Version switching not available for this runtime"
-		}
+		versions := gui.Orchestrator.GetAvailableVersions(string(service.Type))
 		
 		for _, v := range versions {
 			indicator := "  "
@@ -158,33 +149,44 @@ func (gui *Gui) handleLumineLanguageVersionSwitch(g *gocui.Gui, v *gocui.View) e
 		return nil
 	}
 
-	var versions []string
-	var switchFunc func(string) error
-	serviceType := string(service.Type)
-
-	if serviceType == "php-fpm" || strings.Contains(serviceType, "php") {
-		versions = []string{"7.4", "8.0", "8.1", "8.2", "8.3"}
-		switchFunc = gui.Orchestrator.SwitchPHPVersion
-	} else if serviceType == "node" || strings.Contains(serviceType, "node") {
-		versions = []string{"16", "18", "20", "21", "22"}
-		switchFunc = gui.Orchestrator.SwitchNodeVersion
-	} else if serviceType == "python" || strings.Contains(serviceType, "python") {
-		versions = []string{"3.9", "3.10", "3.11", "3.12"}
-		switchFunc = gui.Orchestrator.SwitchPythonVersion
-	} else {
-		return gui.createErrorPanel("Version switching not supported for this runtime")
+	versions := gui.Orchestrator.GetAvailableVersions(string(service.Type))
+	if len(versions) == 0 {
+		return gui.createErrorPanel("No versions available for this runtime")
 	}
 
 	menuItems := make([]*types.MenuItem, len(versions))
 	for i, version := range versions {
 		v := version
+		currentIndicator := ""
+		if v == service.Version {
+			currentIndicator = " (current)"
+		}
+		
 		menuItems[i] = &types.MenuItem{
-			LabelColumns: []string{fmt.Sprintf("Switch to %s", v)},
+			LabelColumns: []string{fmt.Sprintf("%s%s", v, currentIndicator)},
 			OnPress: func() error {
 				return gui.WithWaitingStatus("Switching version...", func() error {
-					if err := switchFunc(v); err != nil {
-						return gui.createErrorPanel(err.Error())
+					serviceType := string(service.Type)
+					
+					// Use specific switch functions for PHP/Node/Python
+					if serviceType == "php-fpm" {
+						if err := gui.Orchestrator.SwitchPHPVersion(v); err != nil {
+							return gui.createErrorPanel(err.Error())
+						}
+					} else if serviceType == "node" {
+						if err := gui.Orchestrator.SwitchNodeVersion(v); err != nil {
+							return gui.createErrorPanel(err.Error())
+						}
+					} else if serviceType == "python" {
+						if err := gui.Orchestrator.SwitchPythonVersion(v); err != nil {
+							return gui.createErrorPanel(err.Error())
+						}
+					} else {
+						if err := gui.Orchestrator.SwitchServiceVersion(service.Name, v); err != nil {
+							return gui.createErrorPanel(err.Error())
+						}
 					}
+					
 					return gui.refreshLumineLanguages()
 				})
 			},

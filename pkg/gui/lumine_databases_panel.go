@@ -56,18 +56,22 @@ func (gui *Gui) getLumineDatabasesPanel() *panels.SideListPanel[*lumine.Service]
 			return a.Name < b.Name
 		},
 		GetTableCells: func(service *lumine.Service) []string {
+			statusText := "inactive"
 			statusColor := color.FgRed
 			if service.Status == "running" {
+				statusText = "active"
 				statusColor = color.FgGreen
-			} else if service.Status == "stopped" {
-				statusColor = color.FgYellow
+			}
+
+			displayName := service.DisplayName
+			if displayName == "" {
+				displayName = service.Name
 			}
 
 			return []string{
-				utils.ColoredString(service.Name, color.FgCyan),
+				utils.ColoredString(displayName, color.FgCyan),
 				string(service.Type),
-				utils.ColoredString(service.Status, statusColor),
-				fmt.Sprintf(":%d", service.Port),
+				utils.ColoredString(statusText, statusColor),
 			}
 		},
 	}
@@ -353,4 +357,43 @@ func (gui *Gui) refreshLumineDatabases() error {
 	databases := gui.Orchestrator.ServiceManager.ListDatabaseServices()
 	gui.Panels.LumineDatabases.SetItems(databases)
 	return gui.Panels.LumineDatabases.RerenderList()
+}
+
+// Handler for switching database version
+func (gui *Gui) handleLumineDatabaseVersionSwitch(g *gocui.Gui, v *gocui.View) error {
+	service, err := gui.Panels.LumineDatabases.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+
+	versions := gui.Orchestrator.GetAvailableVersions(string(service.Type))
+	if len(versions) == 0 {
+		return gui.createErrorPanel("No versions available for this database")
+	}
+
+	menuItems := make([]*types.MenuItem, len(versions))
+	for i, version := range versions {
+		v := version
+		currentIndicator := ""
+		if v == service.Version {
+			currentIndicator = " (current)"
+		}
+		
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{fmt.Sprintf("%s%s", v, currentIndicator)},
+			OnPress: func() error {
+				return gui.WithWaitingStatus("Switching version...", func() error {
+					if err := gui.Orchestrator.SwitchServiceVersion(service.Name, v); err != nil {
+						return gui.createErrorPanel(err.Error())
+					}
+					return gui.refreshLumineDatabases()
+				})
+			},
+		}
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: fmt.Sprintf("Switch %s Version", service.Name),
+		Items: menuItems,
+	})
 }
