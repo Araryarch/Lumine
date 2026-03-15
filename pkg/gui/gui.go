@@ -49,7 +49,7 @@ type Gui struct {
 type Panels struct {
 	LumineDocker    *panels.SideListPanel[*DockerControl]
 	LumineServers   *panels.SideListPanel[*lumine.Service]
-	LumineLanguages *panels.SideListPanel[*lumine.Tool]
+	LumineLanguages *panels.SideListPanel[*lumine.Service]
 	LumineProjects  *panels.SideListPanel[*lumine.Project]
 	LumineDatabases *panels.SideListPanel[*lumine.Service]
 	Menu            *panels.SideListPanel[*types.MenuItem]
@@ -270,6 +270,17 @@ func (gui *Gui) Run() error {
 		if err := gui.switchFocus(view); err != nil {
 			return err
 		}
+	}
+	
+	// Show first setup wizard on first run
+	if gui.Orchestrator != nil && gui.Orchestrator.ConfigManager.IsFirstRun() {
+		go func() {
+			// Wait a bit for GUI to fully initialize
+			time.Sleep(500 * time.Millisecond)
+			gui.g.Update(func(g *gocui.Gui) error {
+				return gui.ShowFirstSetupWizard()
+			})
+		}()
 	}
 
 	ctx, finish := context.WithCancel(context.Background())
