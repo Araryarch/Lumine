@@ -2,15 +2,14 @@ package gui
 
 import (
 	"fmt"
-	"strings"
 
+	"github.com/Araryarch/Lumine/pkg/gui/panels"
+	"github.com/Araryarch/Lumine/pkg/gui/types"
+	"github.com/Araryarch/Lumine/pkg/lumine"
+	"github.com/Araryarch/Lumine/pkg/tasks"
+	"github.com/Araryarch/Lumine/pkg/utils"
 	"github.com/fatih/color"
 	"github.com/jesseduffield/gocui"
-	"github.com/jesseduffield/lazydocker/pkg/gui/panels"
-	"github.com/jesseduffield/lazydocker/pkg/gui/types"
-	"github.com/jesseduffield/lazydocker/pkg/lumine"
-	"github.com/jesseduffield/lazydocker/pkg/tasks"
-	"github.com/jesseduffield/lazydocker/pkg/utils"
 )
 
 func (gui *Gui) getLumineServicesPanel() *panels.SideListPanel[*lumine.Service] {
@@ -62,7 +61,7 @@ func (gui *Gui) getLumineServicesPanel() *panels.SideListPanel[*lumine.Service] 
 			} else if service.Status == "stopped" {
 				statusColor = color.FgYellow
 			}
-			
+
 			return []string{
 				utils.ColoredString(service.Name, color.FgCyan),
 				utils.ColoredString(service.Status, statusColor),
@@ -83,15 +82,15 @@ func (gui *Gui) renderLumineServiceInfo(service *lumine.Service) tasks.TaskFunc 
 		output += utils.WithPadding("Type: ", 15) + string(service.Type) + "\n"
 		output += utils.WithPadding("Command: ", 15) + service.Command + "\n"
 		output += utils.WithPadding("PID: ", 15) + fmt.Sprintf("%d", service.PID) + "\n"
-		
+
 		if service.ConfigPath != "" {
 			output += utils.WithPadding("Config: ", 15) + service.ConfigPath + "\n"
 		}
-		
+
 		if service.LogPath != "" {
 			output += utils.WithPadding("Logs: ", 15) + service.LogPath + "\n"
 		}
-		
+
 		return output
 	})
 }
@@ -101,13 +100,13 @@ func (gui *Gui) renderLumineServiceConfig(service *lumine.Service) tasks.TaskFun
 		if service.ConfigPath == "" {
 			return "No configuration file"
 		}
-		
+
 		// Read config file content
 		content, err := gui.OSCommand.RunCommandWithOutput(fmt.Sprintf("cat %s", service.ConfigPath))
 		if err != nil {
 			return fmt.Sprintf("Error reading config: %v", err)
 		}
-		
+
 		return content
 	})
 }
@@ -115,17 +114,17 @@ func (gui *Gui) renderLumineServiceConfig(service *lumine.Service) tasks.TaskFun
 func (gui *Gui) renderLumineServiceHealth(service *lumine.Service) tasks.TaskFunc {
 	return gui.NewSimpleRenderStringTask(func() string {
 		health := gui.Orchestrator.ServiceManager.CheckHealth(service.Name)
-		
+
 		output := ""
 		output += utils.WithPadding("Service: ", 15) + service.Name + "\n"
 		output += utils.WithPadding("Healthy: ", 15) + fmt.Sprintf("%v", health.Healthy) + "\n"
 		output += utils.WithPadding("Uptime: ", 15) + health.Uptime.String() + "\n"
 		output += utils.WithPadding("Last Check: ", 15) + health.LastCheck.Format("2006-01-02 15:04:05") + "\n"
-		
+
 		if health.Error != "" {
 			output += "\n" + utils.ColoredString("Error: "+health.Error, color.FgRed) + "\n"
 		}
-		
+
 		return output
 	})
 }
@@ -149,11 +148,11 @@ func (gui *Gui) handleLumineServiceStart(g *gocui.Gui, v *gocui.View) error {
 	if err != nil {
 		return nil
 	}
-	
+
 	if service.Status == "running" {
 		return gui.createErrorPanel("Service is already running")
 	}
-	
+
 	return gui.WithWaitingStatus("Starting service...", func() error {
 		if err := gui.Orchestrator.StartService(service.Name); err != nil {
 			return gui.createErrorPanel(err.Error())
@@ -167,11 +166,11 @@ func (gui *Gui) handleLumineServiceStop(g *gocui.Gui, v *gocui.View) error {
 	if err != nil {
 		return nil
 	}
-	
+
 	if service.Status != "running" {
 		return gui.createErrorPanel("Service is not running")
 	}
-	
+
 	return gui.createConfirmationPanel("Confirm", fmt.Sprintf("Stop %s?", service.Name), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus("Stopping service...", func() error {
 			if err := gui.Orchestrator.StopService(service.Name); err != nil {
@@ -187,7 +186,7 @@ func (gui *Gui) handleLumineServiceRestart(g *gocui.Gui, v *gocui.View) error {
 	if err != nil {
 		return nil
 	}
-	
+
 	return gui.WithWaitingStatus("Restarting service...", func() error {
 		if err := gui.Orchestrator.RestartService(service.Name); err != nil {
 			return gui.createErrorPanel(err.Error())
@@ -201,21 +200,18 @@ func (gui *Gui) handleLumineServiceVersionSwitch(g *gocui.Gui, v *gocui.View) er
 	if err != nil {
 		return nil
 	}
-	
+
 	var versions []string
 	var switchFunc func(string) error
-	
+
 	switch service.Type {
-	case lumine.ServiceTypePHP:
+	case lumine.ServiceTypePHPFPM:
 		versions = []string{"7.4", "8.0", "8.1", "8.2", "8.3"}
 		switchFunc = gui.Orchestrator.SwitchPHPVersion
-	case lumine.ServiceTypeNode:
-		versions = []string{"16", "18", "20", "22"}
-		switchFunc = gui.Orchestrator.SwitchNodeVersion
 	default:
 		return gui.createErrorPanel("Version switching not supported for this service")
 	}
-	
+
 	menuItems := make([]*types.MenuItem, len(versions))
 	for i, version := range versions {
 		v := version // capture for closure
@@ -231,7 +227,7 @@ func (gui *Gui) handleLumineServiceVersionSwitch(g *gocui.Gui, v *gocui.View) er
 			},
 		}
 	}
-	
+
 	return gui.Menu(CreateMenuOptions{
 		Title: fmt.Sprintf("Switch %s Version", service.Name),
 		Items: menuItems,
@@ -243,16 +239,16 @@ func (gui *Gui) handleLumineServiceHealth(g *gocui.Gui, v *gocui.View) error {
 	if err != nil {
 		return nil
 	}
-	
+
 	health := gui.Orchestrator.ServiceManager.CheckHealth(service.Name)
-	
-	message := fmt.Sprintf("Service: %s\nHealthy: %v\nUptime: %s", 
+
+	message := fmt.Sprintf("Service: %s\nHealthy: %v\nUptime: %s",
 		service.Name, health.Healthy, health.Uptime)
-	
+
 	if health.Error != "" {
 		message += fmt.Sprintf("\nError: %s", health.Error)
 	}
-	
+
 	return gui.createConfirmationPanel("Health Status", message, func(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}, nil)
@@ -262,9 +258,9 @@ func (gui *Gui) refreshLumineServices() error {
 	if gui.Orchestrator == nil || gui.Panels.LumineServices == nil {
 		return nil
 	}
-	
+
 	services := gui.Orchestrator.ServiceManager.ListServices()
 	gui.Panels.LumineServices.SetItems(services)
-	
+
 	return gui.Panels.LumineServices.RerenderList()
 }

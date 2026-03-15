@@ -1,9 +1,9 @@
 package gui
 
 import (
-	"github.com/jesseduffield/lazydocker/pkg/gui/panels"
-	"github.com/jesseduffield/lazydocker/pkg/gui/types"
-	"github.com/jesseduffield/lazydocker/pkg/utils"
+	"github.com/Araryarch/Lumine/pkg/gui/panels"
+	"github.com/Araryarch/Lumine/pkg/gui/types"
+	"github.com/Araryarch/Lumine/pkg/utils"
 )
 
 type CreateMenuOptions struct {

@@ -2,24 +2,21 @@ package gui
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/docker/docker/api/types/events"
-
-	"github.com/go-errors/errors"
-
+	"github.com/Araryarch/Lumine/pkg/commands"
+	"github.com/Araryarch/Lumine/pkg/config"
+	"github.com/Araryarch/Lumine/pkg/gui/panels"
+	"github.com/Araryarch/Lumine/pkg/gui/types"
+	"github.com/Araryarch/Lumine/pkg/i18n"
+	"github.com/Araryarch/Lumine/pkg/lumine"
+	"github.com/Araryarch/Lumine/pkg/tasks"
 	throttle "github.com/boz/go-throttle"
 	"github.com/jesseduffield/gocui"
 	lcUtils "github.com/jesseduffield/lazycore/pkg/utils"
-	"github.com/jesseduffield/lazydocker/pkg/commands"
-	"github.com/jesseduffield/lazydocker/pkg/config"
-	"github.com/jesseduffield/lazydocker/pkg/gui/panels"
-	"github.com/jesseduffield/lazydocker/pkg/gui/types"
-	"github.com/jesseduffield/lazydocker/pkg/i18n"
-	"github.com/jesseduffield/lazydocker/pkg/lumine"
-	"github.com/jesseduffield/lazydocker/pkg/tasks"
 	"github.com/sasha-s/go-deadlock"
 	"github.com/sirupsen/logrus"
 )
@@ -37,6 +34,7 @@ type Gui struct {
 	ErrorChan     chan error
 	Views         Views
 	Orchestrator  *lumine.Orchestrator
+	DockerCommand *DockerCommand
 
 	// if we've suspended the gui (e.g. because we've switched to a subprocess)
 	// we typically want to pause some things that are running like background
@@ -53,6 +51,10 @@ type Panels struct {
 	LumineProjects  *panels.SideListPanel[*lumine.Project]
 	LumineDatabases *panels.SideListPanel[*lumine.Database]
 	Menu            *panels.SideListPanel[*types.MenuItem]
+}
+
+type DockerCommand struct {
+	InDockerComposeProject bool
 }
 
 type Mutexes struct {
@@ -75,7 +77,6 @@ type guiState struct {
 	Platform         commands.Platform
 	Panels           *panelStates
 	SubProcessOutput string
-	Stats            map[string]commands.ContainerStats
 
 	// if true, we show containers with an 'exited' status in the containers panel
 	ShowExitedContainers bool
@@ -189,7 +190,7 @@ func (gui *Gui) goEvery(interval time.Duration, function func() error) {
 func (gui *Gui) Run() error {
 	// closing our task manager which in turn closes the current task if there is any, so we aren't leaving processes lying around after closing lazydocker
 	defer gui.taskManager.Close()
-	
+
 	// Close Lumine orchestrator on exit
 	if gui.Orchestrator != nil {
 		defer gui.Orchestrator.Close()
@@ -270,13 +271,12 @@ func (gui *Gui) Run() error {
 	defer finish()
 
 	go gui.listenForEvents(ctx, throttledRefresh.Trigger)
-	go gui.monitorContainerStats(ctx)
 
 	go func() {
 		throttledRefresh.Trigger()
 
 		gui.goEvery(time.Millisecond*30, gui.reRenderMain)
-		
+
 		// Lumine refresh cycles
 		if gui.Orchestrator != nil {
 			gui.goEvery(time.Millisecond*2000, gui.refreshLumineServices)
@@ -296,17 +296,13 @@ func (gui *Gui) setPanels() {
 	gui.Panels = Panels{
 		Menu: gui.getMenuPanel(),
 	}
-	
+
 	// Initialize Lumine panels
 	if gui.Orchestrator != nil {
 		gui.Panels.LumineServices = gui.getLumineServicesPanel()
 		gui.Panels.LumineProjects = gui.getLumineProjectsPanel()
 		gui.Panels.LumineDatabases = gui.getLumineDatabasesPanel()
 	}
-}
-
-func (gui *Gui) updateContainerDetails() error {
-	return gui.DockerCommand.RefreshContainerDetails(gui.Panels.Containers.List.GetAllItems())
 }
 
 func (gui *Gui) refresh() {
@@ -331,55 +327,17 @@ func (gui *Gui) refresh() {
 }
 
 func (gui *Gui) listenForEvents(ctx context.Context, refresh func()) {
-	errorCount := 0
+	// Lumine doesn't need Docker event listening
+	// Just refresh periodically
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
 
-	onError := func(err error) {
-		if err != nil {
-			gui.ErrorChan <- errors.Errorf("Docker event stream returned error: %s\nRetry count: %d", err.Error(), errorCount)
-		}
-		errorCount++
-		time.Sleep(time.Second * 2)
-	}
-
-outer:
 	for {
-		messageChan, errChan := gui.DockerCommand.Client.Events(context.Background(), events.ListOptions{})
-
-		if errorCount > 0 {
-			select {
-			case <-ctx.Done():
-				return
-			case err := <-errChan:
-				onError(err)
-				continue outer
-			default:
-				// If we're here then we lost connection to docker and we just got it back.
-				// The reason we do this refresh explicitly is because successfully
-				// reconnecting with docker does not mean it's going to send us a new
-				// event any time soon.
-
-				// Assuming the confirmation prompt currently holds the given error
-				_ = gui.closeConfirmationPrompt()
-				refresh()
-				errorCount = 0
-			}
-		}
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case message := <-messageChan:
-				// We could be more granular about what events should trigger which refreshes.
-				// At the moment it's pretty efficient though, and it might not be worth
-				// the maintenance burden of mapping specific events to specific refreshes
-				refresh()
-
-				gui.Log.Infof("received event of type: %s", message.Type)
-			case err := <-errChan:
-				onError(err)
-				continue outer
-			}
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			refresh()
 		}
 	}
 }
@@ -465,6 +423,10 @@ func (gui *Gui) ShouldRefresh(key string) bool {
 	return true
 }
 
+func (gui *Gui) FilterString(view *gocui.View) string {
+	return ""
+}
+
 func (gui *Gui) initiallyFocusedViewName() string {
 	return "lumineServices"
 }
@@ -477,23 +439,9 @@ func (gui *Gui) Update(f func() error) {
 	gui.g.Update(func(*gocui.Gui) error { return f() })
 }
 
-func (gui *Gui) monitorContainerStats(ctx context.Context) {
-	// periodically loop through running containers and see if we need to create a monitor goroutine for any
-	// every second we check if we need to spawn a new goroutine
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			for _, container := range gui.Panels.Containers.List.GetAllItems() {
-				if !container.MonitoringStats {
-					go gui.DockerCommand.CreateClientStatMonitor(container)
-				}
-			}
-		}
-	}
+func (gui *Gui) promptToReturn() {
+	fmt.Print("\nPress return to continue...")
+	fmt.Scanln()
 }
 
 // this is used by our cheatsheet code to generate keybindings. We need some views

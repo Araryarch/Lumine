@@ -10,10 +10,10 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/integrii/flaggy"
-	"github.com/jesseduffield/lazydocker/pkg/app"
-	"github.com/jesseduffield/lazydocker/pkg/config"
-	"github.com/jesseduffield/lazydocker/pkg/lumine"
-	"github.com/jesseduffield/lazydocker/pkg/utils"
+	"github.com/Araryarch/Lumine/pkg/app"
+	"github.com/Araryarch/Lumine/pkg/config"
+	"github.com/Araryarch/Lumine/pkg/lumine"
+	"github.com/Araryarch/Lumine/pkg/utils"
 	"github.com/jesseduffield/yaml"
 	"github.com/samber/lo"
 )

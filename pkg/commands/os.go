@@ -4,7 +4,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/jesseduffield/lazydocker/pkg/config"
+	"github.com/Araryarch/Lumine/pkg/config"
 	"github.com/sirupsen/logrus"
 )
 
@@ -77,4 +77,12 @@ func (c *OSCommand) EditFile(filename string) (*exec.Cmd, error) {
 // RunCustomCommand runs a custom command
 func (c *OSCommand) RunCustomCommand(command string) *exec.Cmd {
 	return c.ExecutableFromString(command)
+}
+
+// Kill kills a process
+func (c *OSCommand) Kill(cmd *exec.Cmd) error {
+	if cmd.Process != nil {
+		return cmd.Process.Kill()
+	}
+	return nil
 }

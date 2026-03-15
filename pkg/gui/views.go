@@ -31,6 +31,15 @@ type Views struct {
 	LumineProjects  *gocui.View
 	LumineDatabases *gocui.View
 
+	// Legacy panels (for compatibility)
+	Project    *gocui.View
+	Services   *gocui.View
+	Containers *gocui.View
+	Images     *gocui.View
+	Volumes    *gocui.View
+	Stacks     *gocui.View
+	Networks   *gocui.View
+
 	// main panel
 	Main *gocui.View
 
@@ -61,6 +70,14 @@ type viewNameMapping struct {
 
 func (gui *Gui) orderedViewNameMappings() []viewNameMapping {
 	mappings := []viewNameMapping{
+		// Legacy views
+		{viewPtr: &gui.Views.Project, name: "project", autoPosition: true},
+		{viewPtr: &gui.Views.Services, name: "services", autoPosition: true},
+		{viewPtr: &gui.Views.Containers, name: "containers", autoPosition: true},
+		{viewPtr: &gui.Views.Images, name: "images", autoPosition: true},
+		{viewPtr: &gui.Views.Volumes, name: "volumes", autoPosition: true},
+		{viewPtr: &gui.Views.Networks, name: "networks", autoPosition: true},
+
 		// Lumine views
 		{viewPtr: &gui.Views.LumineServices, name: "lumineServices", autoPosition: true},
 		{viewPtr: &gui.Views.LumineProjects, name: "lumineProjects", autoPosition: true},
@@ -82,7 +99,7 @@ func (gui *Gui) orderedViewNameMappings() []viewNameMapping {
 		// this guy will cover everything else when it appears
 		{viewPtr: &gui.Views.Limit, name: "limit", autoPosition: true},
 	}
-	
+
 	return mappings
 }
 
@@ -172,20 +189,20 @@ func (gui *Gui) createAllViews() error {
 	gui.Views.Filter.Editable = true
 	gui.Views.Filter.Frame = false
 	gui.Views.Filter.Editor = gocui.EditorFunc(gui.wrapEditor(gocui.SimpleEditor))
-	
+
 	// Configure Lumine views
-	selectedLineBgColor := GetGocuiStyle(gui.Config.UserConfig.Gui.Theme.SelectedLineBgColor)
-	
+	selectedLineBgColor = GetGocuiStyle(gui.Config.UserConfig.Gui.Theme.SelectedLineBgColor)
+
 	gui.Views.LumineServices.Highlight = true
 	gui.Views.LumineServices.Title = "Lumine Services"
 	gui.Views.LumineServices.TitlePrefix = "[1]"
 	gui.Views.LumineServices.SelBgColor = selectedLineBgColor
-	
+
 	gui.Views.LumineProjects.Highlight = true
 	gui.Views.LumineProjects.Title = "Lumine Projects"
 	gui.Views.LumineProjects.TitlePrefix = "[2]"
 	gui.Views.LumineProjects.SelBgColor = selectedLineBgColor
-	
+
 	gui.Views.LumineDatabases.Highlight = true
 	gui.Views.LumineDatabases.Title = "Lumine Databases"
 	gui.Views.LumineDatabases.TitlePrefix = "[3]"

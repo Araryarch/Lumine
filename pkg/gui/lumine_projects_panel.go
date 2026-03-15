@@ -5,11 +5,11 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/jesseduffield/gocui"
-	"github.com/jesseduffield/lazydocker/pkg/gui/panels"
-	"github.com/jesseduffield/lazydocker/pkg/gui/types"
-	"github.com/jesseduffield/lazydocker/pkg/lumine"
-	"github.com/jesseduffield/lazydocker/pkg/tasks"
-	"github.com/jesseduffield/lazydocker/pkg/utils"
+	"github.com/Araryarch/Lumine/pkg/gui/panels"
+	"github.com/Araryarch/Lumine/pkg/gui/types"
+	"github.com/Araryarch/Lumine/pkg/lumine"
+	"github.com/Araryarch/Lumine/pkg/tasks"
+	"github.com/Araryarch/Lumine/pkg/utils"
 )
 
 func (gui *Gui) getLumineProjectsPanel() *panels.SideListPanel[*lumine.Project] {

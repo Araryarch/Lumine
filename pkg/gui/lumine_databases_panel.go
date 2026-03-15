@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Araryarch/Lumine/pkg/gui/panels"
+	"github.com/Araryarch/Lumine/pkg/gui/types"
+	"github.com/Araryarch/Lumine/pkg/lumine"
+	"github.com/Araryarch/Lumine/pkg/tasks"
+	"github.com/Araryarch/Lumine/pkg/utils"
 	"github.com/fatih/color"
 	"github.com/jesseduffield/gocui"
-	"github.com/jesseduffield/lazydocker/pkg/gui/panels"
-	"github.com/jesseduffield/lazydocker/pkg/gui/types"
-	"github.com/jesseduffield/lazydocker/pkg/lumine"
-	"github.com/jesseduffield/lazydocker/pkg/tasks"
-	"github.com/jesseduffield/lazydocker/pkg/utils"
 )
 
 func (gui *Gui) getLumineDatabasesPanel() *panels.SideListPanel[*lumine.Database] {
@@ -54,7 +54,7 @@ func (gui *Gui) getLumineDatabasesPanel() *panels.SideListPanel[*lumine.Database
 			if db.Name == gui.Orchestrator.DatabaseManager.GetActiveConnection().Database {
 				activeIndicator = utils.ColoredString("●", color.FgGreen)
 			}
-			
+
 			return []string{
 				activeIndicator,
 				utils.ColoredString(db.Name, color.FgCyan),
@@ -72,15 +72,15 @@ func (gui *Gui) renderLumineDatabaseInfo(db *lumine.Database) tasks.TaskFunc {
 		output += utils.WithPadding("Type: ", 15) + string(db.Type) + "\n"
 		output += utils.WithPadding("Size: ", 15) + db.Size + "\n"
 		output += utils.WithPadding("Created: ", 15) + db.CreatedAt.Format("2006-01-02 15:04:05") + "\n"
-		
+
 		activeConn := gui.Orchestrator.DatabaseManager.GetActiveConnection()
 		if db.Name == activeConn.Database {
 			output += "\n" + utils.ColoredString("● Active Connection", color.FgGreen) + "\n"
 			output += utils.WithPadding("Host: ", 15) + activeConn.Host + "\n"
 			output += utils.WithPadding("Port: ", 15) + fmt.Sprintf("%d", activeConn.Port) + "\n"
-			output += utils.WithPadding("User: ", 15) + activeConn.User + "\n"
+			output += utils.WithPadding("User: ", 15) + activeConn.Username + "\n"
 		}
-		
+
 		return output
 	})
 }
@@ -93,16 +93,16 @@ func (gui *Gui) renderLumineDatabaseLogs(db *lumine.Database) tasks.TaskFunc {
 				gui.RenderStringMain(fmt.Sprintf("Error fetching logs: %v", err))
 				return
 			}
-			
+
 			output := utils.ColoredString("Recent Queries:\n\n", color.FgYellow)
 			for _, log := range logs {
-				output += fmt.Sprintf("[%s] %s (%.2fms)\n", 
+				output += fmt.Sprintf("[%s] %s (%.2fms)\n",
 					log.Timestamp.Format("15:04:05"),
 					log.Query,
 					log.Duration.Seconds()*1000,
 				)
 			}
-			
+
 			gui.reRenderStringMain(output)
 		},
 		Duration:   time.Second * 2,
@@ -118,20 +118,20 @@ func (gui *Gui) renderLumineDatabaseSlowQueries(db *lumine.Database) tasks.TaskF
 		if err != nil {
 			return fmt.Sprintf("Error fetching slow queries: %v", err)
 		}
-		
+
 		if len(logs) == 0 {
 			return "No slow queries found (threshold: 100ms)"
 		}
-		
+
 		output := utils.ColoredString("Slow Queries (>100ms):\n\n", color.FgRed)
 		for _, log := range logs {
-			output += fmt.Sprintf("[%s] %.2fms\n%s\n\n", 
+			output += fmt.Sprintf("[%s] %.2fms\n%s\n\n",
 				log.Timestamp.Format("15:04:05"),
 				log.Duration.Seconds()*1000,
 				log.Query,
 			)
 		}
-		
+
 		return output
 	})
 }
@@ -143,7 +143,7 @@ func (gui *Gui) handleLumineDatabaseCreate(g *gocui.Gui, v *gocui.View) error {
 		if dbName == "" {
 			return gui.createErrorPanel("Database name cannot be empty")
 		}
-		
+
 		return gui.WithWaitingStatus("Creating database...", func() error {
 			if err := gui.Orchestrator.CreateDatabase(dbName); err != nil {
 				return gui.createErrorPanel(err.Error())
@@ -158,7 +158,7 @@ func (gui *Gui) handleLumineDatabaseDrop(g *gocui.Gui, v *gocui.View) error {
 	if err != nil {
 		return nil
 	}
-	
+
 	return gui.createConfirmationPanel("Confirm", fmt.Sprintf("Drop database '%s'? This cannot be undone.", db.Name), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus("Dropping database...", func() error {
 			if err := gui.Orchestrator.DropDatabase(db.Name); err != nil {
@@ -174,7 +174,7 @@ func (gui *Gui) handleLumineDatabaseBackup(g *gocui.Gui, v *gocui.View) error {
 	if err != nil {
 		return nil
 	}
-	
+
 	return gui.WithWaitingStatus("Backing up database...", func() error {
 		if err := gui.Orchestrator.BackupDatabase(db.Name); err != nil {
 			return gui.createErrorPanel(err.Error())
@@ -184,13 +184,8 @@ func (gui *Gui) handleLumineDatabaseBackup(g *gocui.Gui, v *gocui.View) error {
 }
 
 func (gui *Gui) handleLumineDatabaseSwitch(g *gocui.Gui, v *gocui.View) error {
-	db, err := gui.Panels.LumineDatabases.GetSelectedItem()
-	if err != nil {
-		return nil
-	}
-	
 	profiles := gui.Orchestrator.DatabaseManager.ListProfiles()
-	
+
 	menuItems := make([]*types.MenuItem, len(profiles))
 	for i, profile := range profiles {
 		p := profile // capture for closure
@@ -207,7 +202,7 @@ func (gui *Gui) handleLumineDatabaseSwitch(g *gocui.Gui, v *gocui.View) error {
 			},
 		}
 	}
-	
+
 	return gui.Menu(CreateMenuOptions{
 		Title: "Switch Database Connection",
 		Items: menuItems,
@@ -218,14 +213,14 @@ func (gui *Gui) refreshLumineDatabases() error {
 	if gui.Orchestrator == nil || gui.Panels.LumineDatabases == nil {
 		return nil
 	}
-	
+
 	databases, err := gui.Orchestrator.DatabaseManager.ListDatabases()
 	if err != nil {
 		gui.Log.Error(err)
 		return nil
 	}
-	
+
 	gui.Panels.LumineDatabases.SetItems(databases)
-	
+
 	return gui.Panels.LumineDatabases.RerenderList()
 }

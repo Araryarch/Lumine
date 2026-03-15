@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/jesseduffield/lazydocker/pkg/cheatsheet"
+	"github.com/Araryarch/Lumine/pkg/cheatsheet"
 )
 
 func main() {

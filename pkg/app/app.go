@@ -4,12 +4,12 @@ import (
 	"io"
 	"strings"
 
-	"github.com/jesseduffield/lazydocker/pkg/commands"
-	"github.com/jesseduffield/lazydocker/pkg/config"
-	"github.com/jesseduffield/lazydocker/pkg/gui"
-	"github.com/jesseduffield/lazydocker/pkg/i18n"
-	"github.com/jesseduffield/lazydocker/pkg/log"
-	"github.com/jesseduffield/lazydocker/pkg/utils"
+	"github.com/Araryarch/Lumine/pkg/commands"
+	"github.com/Araryarch/Lumine/pkg/config"
+	"github.com/Araryarch/Lumine/pkg/gui"
+	"github.com/Araryarch/Lumine/pkg/i18n"
+	"github.com/Araryarch/Lumine/pkg/log"
+	"github.com/Araryarch/Lumine/pkg/utils"
 	"github.com/sirupsen/logrus"
 )
 

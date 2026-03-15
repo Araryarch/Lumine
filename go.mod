@@ -1,4 +1,4 @@
-module github.com/jesseduffield/lazydocker
+module github.com/Araryarch/Lumine
 
 go 1.22
 
