@@ -321,6 +321,13 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 		},
 		{
 			ViewName:    "lumineServers",
+			Key:         'X',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineServerExec,
+			Description: "Execute Command",
+		},
+		{
+			ViewName:    "lumineServers",
 			Key:         'c',
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleLumineSettings,
@@ -364,6 +371,59 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleLumineLanguageEdit,
 			Description: "Edit Settings",
+		},
+		{
+			ViewName:    "lumineLanguages",
+			Key:         'X',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineLanguageExec,
+			Description: "Execute Command",
+		},
+	}
+
+	// Lumine File Services panel bindings
+	lumineFilesBindings := []*Binding{
+		{
+			ViewName:    "lumineFiles",
+			Key:         's',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineFileServiceStart,
+			Description: "Start Service",
+		},
+		{
+			ViewName:    "lumineFiles",
+			Key:         'S',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineFileServiceStop,
+			Description: "Stop Service",
+		},
+		{
+			ViewName:    "lumineFiles",
+			Key:         'r',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineFileServiceRestart,
+			Description: "Restart Service",
+		},
+		{
+			ViewName:    "lumineFiles",
+			Key:         'n',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineFileServiceAdd,
+			Description: "New File Service",
+		},
+		{
+			ViewName:    "lumineFiles",
+			Key:         'e',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineFileServiceEdit,
+			Description: "Edit Settings",
+		},
+		{
+			ViewName:    "lumineFiles",
+			Key:         'x',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineFileServiceRemove,
+			Description: "Remove Service",
 		},
 	}
 
@@ -465,11 +525,19 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Handler:     gui.handleLumineDatabaseServiceRemove,
 			Description: "Remove Service",
 		},
+		{
+			ViewName:    "lumineDatabases",
+			Key:         'X',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineDatabaseExec,
+			Description: "Execute Command",
+		},
 	}
 
 	bindings = append(bindings, lumineDockerBindings...)
 	bindings = append(bindings, lumineServersBindings...)
 	bindings = append(bindings, lumineLanguagesBindings...)
+	bindings = append(bindings, lumineFilesBindings...)
 	bindings = append(bindings, lumineProjectsBindings...)
 	bindings = append(bindings, lumineDatabasesBindings...)
 
@@ -478,8 +546,9 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 		{Handler: gui.handleGoTo(gui.Panels.LumineDocker.View), Key: '1', Description: "Focus Docker"},
 		{Handler: gui.handleGoTo(gui.Panels.LumineServers.View), Key: '2', Description: "Focus Servers"},
 		{Handler: gui.handleGoTo(gui.Panels.LumineLanguages.View), Key: '3', Description: "Focus Languages"},
-		{Handler: gui.handleGoTo(gui.Panels.LumineProjects.View), Key: '4', Description: "Focus Projects"},
-		{Handler: gui.handleGoTo(gui.Panels.LumineDatabases.View), Key: '5', Description: "Focus Databases"},
+		{Handler: gui.handleGoTo(gui.Panels.LumineFiles.View), Key: '4', Description: "Focus File Services"},
+		{Handler: gui.handleGoTo(gui.Panels.LumineProjects.View), Key: '5', Description: "Focus Projects"},
+		{Handler: gui.handleGoTo(gui.Panels.LumineDatabases.View), Key: '6', Description: "Focus Databases"},
 	}...)
 
 	// Add up/down/click bindings for all panels

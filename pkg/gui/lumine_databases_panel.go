@@ -421,3 +421,112 @@ func (gui *Gui) renderLumineDatabaseServiceLogs(service *lumine.Service) tasks.T
 		return logs
 	})
 }
+
+
+// Handler for executing command in database container
+func (gui *Gui) handleLumineDatabaseExec(g *gocui.Gui, v *gocui.View) error {
+	service, err := gui.Panels.LumineDatabases.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+
+	if service.Status != "running" {
+		return gui.createErrorPanel("Database is not running. Start it first.")
+	}
+
+	serviceType := string(service.Type)
+	var commands []string
+	
+	if serviceType == "mysql" {
+		commands = []string{
+			"mysql -uroot -proot -e 'SHOW DATABASES;'",
+			"mysql -uroot -proot",
+			"mysqldump -uroot -proot --all-databases",
+		}
+	} else if serviceType == "postgresql" {
+		commands = []string{
+			"psql -U postgres -c '\\l'",
+			"psql -U postgres",
+			"pg_dump -U postgres",
+		}
+	} else if serviceType == "mongodb" {
+		commands = []string{
+			"mongosh --eval 'show dbs'",
+			"mongosh",
+			"mongodump",
+		}
+	} else if serviceType == "redis" {
+		commands = []string{
+			"redis-cli PING",
+			"redis-cli INFO",
+			"redis-cli",
+		}
+	}
+
+	if len(commands) == 0 {
+		return gui.createPromptPanel("Command to execute", func(g *gocui.Gui, v *gocui.View) error {
+			command := gui.trimmedContent(v)
+			if command == "" {
+				return gui.createErrorPanel("Command cannot be empty")
+			}
+
+			return gui.WithWaitingStatus(fmt.Sprintf("Executing: %s", command), func() error {
+				output, err := gui.Orchestrator.ServiceManager.ExecuteCommand(service.Name, command)
+				
+				if err != nil {
+					return gui.createErrorPanel(fmt.Sprintf("Command failed: %v\n\nOutput:\n%s", err, output))
+				}
+				
+				return gui.createInfoPanel("Command Output", output)
+			})
+		})
+	}
+
+	// Show menu of common commands
+	menuItems := make([]*types.MenuItem, len(commands)+1)
+	for i, cmd := range commands {
+		c := cmd
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{c},
+			OnPress: func() error {
+				return gui.WithWaitingStatus(fmt.Sprintf("Executing: %s", c), func() error {
+					output, err := gui.Orchestrator.ServiceManager.ExecuteCommand(service.Name, c)
+					
+					if err != nil {
+						return gui.createErrorPanel(fmt.Sprintf("Command failed: %v\n\nOutput:\n%s", err, output))
+					}
+					
+					return gui.createInfoPanel("Command Output", output)
+				})
+			},
+		}
+	}
+	
+	// Add custom command option
+	menuItems[len(commands)] = &types.MenuItem{
+		LabelColumns: []string{"Custom command..."},
+		OnPress: func() error {
+			return gui.createPromptPanel("Command to execute", func(g *gocui.Gui, v *gocui.View) error {
+				command := gui.trimmedContent(v)
+				if command == "" {
+					return gui.createErrorPanel("Command cannot be empty")
+				}
+
+				return gui.WithWaitingStatus(fmt.Sprintf("Executing: %s", command), func() error {
+					output, err := gui.Orchestrator.ServiceManager.ExecuteCommand(service.Name, command)
+					
+					if err != nil {
+						return gui.createErrorPanel(fmt.Sprintf("Command failed: %v\n\nOutput:\n%s", err, output))
+					}
+					
+					return gui.createInfoPanel("Command Output", output)
+				})
+			})
+		},
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: fmt.Sprintf("Execute in %s Container", service.DisplayName),
+		Items: menuItems,
+	})
+}

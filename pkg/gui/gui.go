@@ -50,6 +50,7 @@ type Panels struct {
 	LumineDocker    *panels.SideListPanel[*DockerControl]
 	LumineServers   *panels.SideListPanel[*lumine.Service]
 	LumineLanguages *panels.SideListPanel[*lumine.Service]
+	LumineFiles     *panels.SideListPanel[*lumine.Service]
 	LumineProjects  *panels.SideListPanel[*lumine.Project]
 	LumineDatabases *panels.SideListPanel[*lumine.Service]
 	Menu            *panels.SideListPanel[*types.MenuItem]
@@ -173,8 +174,9 @@ func (gui *Gui) renderGlobalOptions() error {
 		"PgUp/PgDn": gui.Tr.Scroll,
 		"← → ↑ ↓":   gui.Tr.Navigate,
 		"q":         gui.Tr.Quit,
-		"b":         gui.Tr.ViewBulkCommands,
-		"x":         gui.Tr.Menu,
+		"m":         gui.Tr.Menu,
+		"w":         "Setup Wizard",
+		"1-6":       "Switch Panel",
 	})
 }
 
@@ -298,6 +300,7 @@ func (gui *Gui) Run() error {
 			gui.goEvery(time.Millisecond*2000, gui.refreshDockerControl)
 			gui.goEvery(time.Millisecond*2000, gui.refreshLumineServers)
 			gui.goEvery(time.Millisecond*2000, gui.refreshLumineLanguages)
+			gui.goEvery(time.Millisecond*2000, gui.refreshLumineFiles)
 			gui.goEvery(time.Millisecond*5000, gui.refreshLumineProjects)
 			gui.goEvery(time.Millisecond*3000, gui.refreshLumineDatabases)
 			gui.goEvery(time.Millisecond*1000, gui.refreshNotifications)
@@ -321,6 +324,7 @@ func (gui *Gui) setPanels() {
 		gui.Panels.LumineDocker = gui.getLumineDockerPanel()
 		gui.Panels.LumineServers = gui.getLumineServersPanel()
 		gui.Panels.LumineLanguages = gui.getLumineLanguagesPanel()
+		gui.Panels.LumineFiles = gui.getLumineFilesPanel()
 		gui.Panels.LumineProjects = gui.getLumineProjectsPanel()
 		gui.Panels.LumineDatabases = gui.getLumineDatabasesPanel()
 	}
@@ -341,6 +345,11 @@ func (gui *Gui) refresh() {
 		}()
 		go func() {
 			if err := gui.refreshLumineLanguages(); err != nil {
+				gui.Log.Error(err)
+			}
+		}()
+		go func() {
+			if err := gui.refreshLumineFiles(); err != nil {
 				gui.Log.Error(err)
 			}
 		}()

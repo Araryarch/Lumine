@@ -314,3 +314,102 @@ func (gui *Gui) refreshLumineLanguages() error {
 	gui.Panels.LumineLanguages.SetItems(languages)
 	return gui.Panels.LumineLanguages.RerenderList()
 }
+
+
+// Handler for executing command in container
+func (gui *Gui) handleLumineLanguageExec(g *gocui.Gui, v *gocui.View) error {
+	service, err := gui.Panels.LumineLanguages.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+
+	if service.Status != "running" {
+		return gui.createErrorPanel("Runtime is not running. Start it first.")
+	}
+
+	// Show common commands based on service type
+	serviceType := string(service.Type)
+	var commands []string
+	
+	if serviceType == "php-fpm" {
+		commands = []string{
+			"composer install",
+			"composer update",
+			"composer require",
+			"php artisan migrate",
+			"php artisan serve",
+			"php -v",
+		}
+	} else if serviceType == "node" {
+		commands = []string{
+			"npm install",
+			"npm update",
+			"npm run dev",
+			"npm run build",
+			"yarn install",
+			"pnpm install",
+			"node -v",
+		}
+	} else if serviceType == "python" {
+		commands = []string{
+			"pip install -r requirements.txt",
+			"pip install",
+			"python manage.py migrate",
+			"python manage.py runserver",
+			"poetry install",
+			"python -V",
+		}
+	} else {
+		return gui.createPromptPanel("Command to execute", func(g *gocui.Gui, v *gocui.View) error {
+			command := gui.trimmedContent(v)
+			if command == "" {
+				return gui.createErrorPanel("Command cannot be empty")
+			}
+			return gui.executeServiceCommand(service, command)
+		})
+	}
+
+	// Show menu of common commands
+	menuItems := make([]*types.MenuItem, len(commands)+1)
+	for i, cmd := range commands {
+		c := cmd
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{c},
+			OnPress: func() error {
+				return gui.executeServiceCommand(service, c)
+			},
+		}
+	}
+	
+	// Add custom command option
+	menuItems[len(commands)] = &types.MenuItem{
+		LabelColumns: []string{"Custom command..."},
+		OnPress: func() error {
+			return gui.createPromptPanel("Command to execute", func(g *gocui.Gui, v *gocui.View) error {
+				command := gui.trimmedContent(v)
+				if command == "" {
+					return gui.createErrorPanel("Command cannot be empty")
+				}
+				return gui.executeServiceCommand(service, command)
+			})
+		},
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: fmt.Sprintf("Execute in %s Container", service.DisplayName),
+		Items: menuItems,
+	})
+}
+
+func (gui *Gui) executeServiceCommand(service *lumine.Service, command string) error {
+	return gui.WithWaitingStatus(fmt.Sprintf("Executing: %s", command), func() error {
+		output, err := gui.Orchestrator.ServiceManager.ExecuteCommand(service.Name, command)
+		
+		if err != nil {
+			return gui.createErrorPanel(fmt.Sprintf("Command failed: %v\n\nOutput:\n%s", err, output))
+		}
+		
+		// Show output
+		return gui.createInfoPanel("Command Output", output)
+	})
+}

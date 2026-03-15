@@ -231,6 +231,18 @@ func (gui *Gui) renderPanelOptions() error {
 		return gui.renderMenuOptions()
 	case "confirmation":
 		return gui.renderConfirmationOptions()
+	case "lumineDocker":
+		return gui.renderLumineDockerOptions()
+	case "lumineServers":
+		return gui.renderLumineServersOptions()
+	case "lumineLanguages":
+		return gui.renderLumineLanguagesOptions()
+	case "lumineFiles":
+		return gui.renderLumineFilesOptions()
+	case "lumineProjects":
+		return gui.renderLumineProjectsOptions()
+	case "lumineDatabases":
+		return gui.renderLumineDatabasesOptions()
 	}
 	return gui.renderGlobalOptions()
 }
@@ -372,6 +384,7 @@ func (gui *Gui) allSidePanels() []panels.ISideListPanel {
 			gui.Panels.LumineDocker,
 			gui.Panels.LumineServers,
 			gui.Panels.LumineLanguages,
+			gui.Panels.LumineFiles,
 			gui.Panels.LumineProjects,
 			gui.Panels.LumineDatabases,
 		)
@@ -399,4 +412,78 @@ func (gui *Gui) getColoredStatus(status string) string {
 	default:
 		return status
 	}
+}
+
+// Panel-specific options rendering
+func (gui *Gui) renderLumineDockerOptions() error {
+	return gui.renderOptionsMap(map[string]string{
+		"s":   "Start Docker",
+		"S":   "Stop Docker",
+		"r":   "Restart",
+		"[ ]": "Switch Tab",
+	})
+}
+
+func (gui *Gui) renderLumineServersOptions() error {
+	return gui.renderOptionsMap(map[string]string{
+		"s":   "Start",
+		"S":   "Stop",
+		"r":   "Restart",
+		"n":   "New",
+		"e":   "Edit",
+		"v":   "Version",
+		"x":   "Remove",
+		"X":   "Exec",
+		"[ ]": "Switch Tab",
+	})
+}
+
+func (gui *Gui) renderLumineLanguagesOptions() error {
+	return gui.renderOptionsMap(map[string]string{
+		"s":   "Start",
+		"S":   "Stop",
+		"r":   "Restart",
+		"e":   "Edit",
+		"v":   "Version",
+		"X":   "Exec",
+		"[ ]": "Switch Tab",
+	})
+}
+
+func (gui *Gui) renderLumineFilesOptions() error {
+	return gui.renderOptionsMap(map[string]string{
+		"s":   "Start",
+		"S":   "Stop",
+		"r":   "Restart",
+		"n":   "New",
+		"e":   "Edit",
+		"x":   "Remove",
+		"[ ]": "Switch Tab",
+	})
+}
+
+func (gui *Gui) renderLumineProjectsOptions() error {
+	return gui.renderOptionsMap(map[string]string{
+		"n":   "New",
+		"E":   "Edit",
+		"d":   "Delete",
+		"e":   "Expose",
+		"o":   "Open Browser",
+		"t":   "Terminal",
+		"[ ]": "Switch Tab",
+	})
+}
+
+func (gui *Gui) renderLumineDatabasesOptions() error {
+	return gui.renderOptionsMap(map[string]string{
+		"s":   "Start",
+		"S":   "Stop",
+		"r":   "Restart",
+		"n":   "New",
+		"e":   "Edit",
+		"v":   "Version",
+		"x":   "Remove",
+		"X":   "Exec",
+		"[ ]": "Switch Tab",
+	})
 }

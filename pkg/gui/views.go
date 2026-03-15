@@ -30,6 +30,7 @@ type Views struct {
 	LumineDocker    *gocui.View
 	LumineServers   *gocui.View
 	LumineLanguages *gocui.View
+	LumineFiles     *gocui.View
 	LumineProjects  *gocui.View
 	LumineDatabases *gocui.View
 
@@ -84,6 +85,7 @@ func (gui *Gui) orderedViewNameMappings() []viewNameMapping {
 		{viewPtr: &gui.Views.LumineDocker, name: "lumineDocker", autoPosition: true},
 		{viewPtr: &gui.Views.LumineServers, name: "lumineServers", autoPosition: true},
 		{viewPtr: &gui.Views.LumineLanguages, name: "lumineLanguages", autoPosition: true},
+		{viewPtr: &gui.Views.LumineFiles, name: "lumineFiles", autoPosition: true},
 		{viewPtr: &gui.Views.LumineProjects, name: "lumineProjects", autoPosition: true},
 		{viewPtr: &gui.Views.LumineDatabases, name: "lumineDatabases", autoPosition: true},
 
@@ -212,14 +214,19 @@ func (gui *Gui) createAllViews() error {
 	gui.Views.LumineLanguages.TitlePrefix = "[3]"
 	gui.Views.LumineLanguages.SelBgColor = selectedLineBgColor
 
+	gui.Views.LumineFiles.Highlight = true
+	gui.Views.LumineFiles.Title = "File Services"
+	gui.Views.LumineFiles.TitlePrefix = "[4]"
+	gui.Views.LumineFiles.SelBgColor = selectedLineBgColor
+
 	gui.Views.LumineProjects.Highlight = true
 	gui.Views.LumineProjects.Title = "Projects"
-	gui.Views.LumineProjects.TitlePrefix = "[4]"
+	gui.Views.LumineProjects.TitlePrefix = "[5]"
 	gui.Views.LumineProjects.SelBgColor = selectedLineBgColor
 
 	gui.Views.LumineDatabases.Highlight = true
 	gui.Views.LumineDatabases.Title = "Databases"
-	gui.Views.LumineDatabases.TitlePrefix = "[5]"
+	gui.Views.LumineDatabases.TitlePrefix = "[6]"
 	gui.Views.LumineDatabases.SelBgColor = selectedLineBgColor
 
 	return nil

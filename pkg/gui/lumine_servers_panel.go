@@ -502,3 +502,33 @@ func (gui *Gui) handleLumineServerVersionSwitch(g *gocui.Gui, v *gocui.View) err
 		Items: menuItems,
 	})
 }
+
+
+// Handler for executing command in server container
+func (gui *Gui) handleLumineServerExec(g *gocui.Gui, v *gocui.View) error {
+	service, err := gui.Panels.LumineServers.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+
+	if service.Status != "running" {
+		return gui.createErrorPanel("Server is not running. Start it first.")
+	}
+
+	return gui.createPromptPanel("Command to execute", func(g *gocui.Gui, v *gocui.View) error {
+		command := gui.trimmedContent(v)
+		if command == "" {
+			return gui.createErrorPanel("Command cannot be empty")
+		}
+
+		return gui.WithWaitingStatus(fmt.Sprintf("Executing: %s", command), func() error {
+			output, err := gui.Orchestrator.ServiceManager.ExecuteCommand(service.Name, command)
+			
+			if err != nil {
+				return gui.createErrorPanel(fmt.Sprintf("Command failed: %v\n\nOutput:\n%s", err, output))
+			}
+			
+			return gui.createInfoPanel("Command Output", output)
+		})
+	})
+}
