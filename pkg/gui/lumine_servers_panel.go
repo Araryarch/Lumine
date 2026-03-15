@@ -108,16 +108,20 @@ func (gui *Gui) renderLumineServerConfig(service *lumine.Service) tasks.TaskFunc
 
 func (gui *Gui) renderLumineServerLogs(service *lumine.Service) tasks.TaskFunc {
 	return gui.NewSimpleRenderStringTask(func() string {
-		if service.LogPath == "" {
-			return "No log file configured"
+		if !service.Running {
+			return "Service is not running. Start the service to view logs."
 		}
 
-		content, err := gui.OSCommand.RunCommandWithOutput(fmt.Sprintf("tail -n 50 %s", service.LogPath))
+		logs, err := gui.Orchestrator.ServiceManager.GetServiceLogs(service.Name, 100)
 		if err != nil {
 			return fmt.Sprintf("Error reading logs: %v", err)
 		}
 
-		return content
+		if logs == "" {
+			return "No logs available"
+		}
+
+		return logs
 	})
 }
 

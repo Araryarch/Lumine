@@ -111,7 +111,7 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 		},
 		{
 			ViewName: "",
-			Key:      'x',
+			Key:      'm',
 			Modifier: gocui.ModNone,
 			Handler:  gui.handleCreateOptionsMenu,
 		},
@@ -325,38 +325,10 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 	lumineLanguagesBindings := []*Binding{
 		{
 			ViewName:    "lumineLanguages",
-			Key:         'n',
+			Key:         'r',
 			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineLanguageAdd,
-			Description: "New Runtime",
-		},
-		{
-			ViewName:    "lumineLanguages",
-			Key:         'e',
-			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineLanguageEdit,
-			Description: "Edit Settings",
-		},
-		{
-			ViewName:    "lumineLanguages",
-			Key:         's',
-			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineLanguageStart,
-			Description: "Start Runtime",
-		},
-		{
-			ViewName:    "lumineLanguages",
-			Key:         'S',
-			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineLanguageStop,
-			Description: "Stop Runtime",
-		},
-		{
-			ViewName:    "lumineLanguages",
-			Key:         'v',
-			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineLanguageVersionSwitch,
-			Description: "Switch Version",
+			Handler:     gui.handleLumineLanguageRefresh,
+			Description: "Refresh Status",
 		},
 	}
 

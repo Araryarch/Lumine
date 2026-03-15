@@ -49,7 +49,7 @@ type Gui struct {
 type Panels struct {
 	LumineDocker    *panels.SideListPanel[*DockerControl]
 	LumineServers   *panels.SideListPanel[*lumine.Service]
-	LumineLanguages *panels.SideListPanel[*lumine.Service]
+	LumineLanguages *panels.SideListPanel[*lumine.Tool]
 	LumineProjects  *panels.SideListPanel[*lumine.Project]
 	LumineDatabases *panels.SideListPanel[*lumine.Service]
 	Menu            *panels.SideListPanel[*types.MenuItem]

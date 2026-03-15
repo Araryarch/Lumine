@@ -34,6 +34,11 @@ func (gui *Gui) getLumineDatabasesPanel() *panels.SideListPanel[*lumine.Service]
 						Title:  "Health Status",
 						Render: gui.renderLumineDatabaseServiceHealth,
 					},
+					{
+						Key:    "logs",
+						Title:  "Logs",
+						Render: gui.renderLumineDatabaseServiceLogs,
+					},
 				}
 			},
 			GetItemContextCacheKey: func(service *lumine.Service) string {
@@ -395,5 +400,24 @@ func (gui *Gui) handleLumineDatabaseVersionSwitch(g *gocui.Gui, v *gocui.View) e
 	return gui.Menu(CreateMenuOptions{
 		Title: fmt.Sprintf("Switch %s Version", service.Name),
 		Items: menuItems,
+	})
+}
+
+func (gui *Gui) renderLumineDatabaseServiceLogs(service *lumine.Service) tasks.TaskFunc {
+	return gui.NewSimpleRenderStringTask(func() string {
+		if !service.Running {
+			return "Service is not running. Start the service to view logs."
+		}
+
+		logs, err := gui.Orchestrator.ServiceManager.GetServiceLogs(service.Name, 100)
+		if err != nil {
+			return fmt.Sprintf("Error reading logs: %v", err)
+		}
+
+		if logs == "" {
+			return "No logs available"
+		}
+
+		return logs
 	})
 }
