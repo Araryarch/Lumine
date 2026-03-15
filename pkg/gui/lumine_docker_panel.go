@@ -1,7 +1,10 @@
 package gui
 
 import (
+	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/Araryarch/Lumine/pkg/gui/panels"
 	"github.com/Araryarch/Lumine/pkg/tasks"
@@ -24,6 +27,21 @@ func (gui *Gui) getLumineDockerPanel() *panels.SideListPanel[*DockerControl] {
 						Key:    "status",
 						Title:  "Docker Status",
 						Render: gui.renderDockerStatus,
+					},
+					{
+						Key:    "stats",
+						Title:  "Resource Usage",
+						Render: gui.renderDockerStats,
+					},
+					{
+						Key:    "containers",
+						Title:  "Containers",
+						Render: gui.renderDockerContainers,
+					},
+					{
+						Key:    "logs",
+						Title:  "Docker Logs",
+						Render: gui.renderDockerLogs,
 					},
 					{
 						Key:    "info",
@@ -62,12 +80,118 @@ func (gui *Gui) renderDockerStatus(dc *DockerControl) tasks.TaskFunc {
 		output += utils.WithPadding("Docker: ", 15) + gui.getColoredStatus(dc.Status) + "\n\n"
 		
 		if dc.Status == "running" {
-			output += utils.ColoredString("Press 'S' to stop Docker\n", color.FgYellow)
+			// Get Docker version
+			version, _ := gui.OSCommand.RunCommandWithOutput("docker version --format '{{.Server.Version}}'")
+			output += utils.WithPadding("Version: ", 15) + strings.TrimSpace(version) + "\n"
+			
+			// Get running containers count
+			containersCount, _ := gui.OSCommand.RunCommandWithOutput("docker ps -q | wc -l")
+			output += utils.WithPadding("Containers: ", 15) + strings.TrimSpace(containersCount) + " running\n"
+			
+			// Get images count
+			imagesCount, _ := gui.OSCommand.RunCommandWithOutput("docker images -q | wc -l")
+			output += utils.WithPadding("Images: ", 15) + strings.TrimSpace(imagesCount) + " total\n"
+			
+			// Get volumes count
+			volumesCount, _ := gui.OSCommand.RunCommandWithOutput("docker volume ls -q | wc -l")
+			output += utils.WithPadding("Volumes: ", 15) + strings.TrimSpace(volumesCount) + " total\n"
+			
+			output += "\n" + utils.ColoredString("Press 'S' to stop Docker\n", color.FgYellow)
 		} else {
 			output += utils.ColoredString("Press 's' to start Docker\n", color.FgGreen)
 		}
 		
 		return output
+	})
+}
+
+func (gui *Gui) renderDockerStats(dc *DockerControl) tasks.TaskFunc {
+	return gui.NewTickerTask(TickerTaskOpts{
+		Func: func(ctx context.Context, notifyStopped chan struct{}) {
+			if dc.Status != "running" {
+				gui.RenderStringMain("Docker is not running")
+				return
+			}
+
+			// Get Docker stats
+			stats, err := gui.OSCommand.RunCommandWithOutput("docker stats --no-stream --format 'table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.NetIO}}\t{{.BlockIO}}'")
+			if err != nil {
+				gui.RenderStringMain(fmt.Sprintf("Error fetching stats: %v", err))
+				return
+			}
+
+			output := utils.ColoredString("Docker Resource Usage:\n\n", color.FgYellow)
+			output += stats
+
+			// Get system-wide Docker info
+			systemInfo, _ := gui.OSCommand.RunCommandWithOutput("docker system df")
+			output += "\n\n" + utils.ColoredString("Disk Usage:\n", color.FgCyan)
+			output += systemInfo
+
+			gui.reRenderStringMain(output)
+		},
+		Duration:   time.Second * 3,
+		Before:     func(ctx context.Context) { gui.clearMainView() },
+		Wrap:       false,
+		Autoscroll: false,
+	})
+}
+
+func (gui *Gui) renderDockerContainers(dc *DockerControl) tasks.TaskFunc {
+	return gui.NewTickerTask(TickerTaskOpts{
+		Func: func(ctx context.Context, notifyStopped chan struct{}) {
+			if dc.Status != "running" {
+				gui.RenderStringMain("Docker is not running")
+				return
+			}
+
+			// Get all containers (running and stopped)
+			containers, err := gui.OSCommand.RunCommandWithOutput("docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Image}}'")
+			if err != nil {
+				gui.RenderStringMain(fmt.Sprintf("Error fetching containers: %v", err))
+				return
+			}
+
+			output := utils.ColoredString("All Containers:\n\n", color.FgYellow)
+			output += containers
+
+			gui.reRenderStringMain(output)
+		},
+		Duration:   time.Second * 2,
+		Before:     func(ctx context.Context) { gui.clearMainView() },
+		Wrap:       false,
+		Autoscroll: false,
+	})
+}
+
+func (gui *Gui) renderDockerLogs(dc *DockerControl) tasks.TaskFunc {
+	return gui.NewTickerTask(TickerTaskOpts{
+		Func: func(ctx context.Context, notifyStopped chan struct{}) {
+			if dc.Status != "running" {
+				gui.RenderStringMain("Docker is not running")
+				return
+			}
+
+			// Get Docker daemon logs (last 50 lines)
+			logs, err := gui.OSCommand.RunCommandWithOutput("journalctl -u docker.service -n 50 --no-pager")
+			if err != nil {
+				// Fallback for systems without systemd
+				logs, err = gui.OSCommand.RunCommandWithOutput("tail -n 50 /var/log/docker.log 2>/dev/null || echo 'Docker logs not available'")
+				if err != nil {
+					gui.RenderStringMain("Docker logs not available")
+					return
+				}
+			}
+
+			output := utils.ColoredString("Docker Daemon Logs:\n\n", color.FgYellow)
+			output += logs
+
+			gui.reRenderStringMain(output)
+		},
+		Duration:   time.Second * 3,
+		Before:     func(ctx context.Context) { gui.clearMainView() },
+		Wrap:       true,
+		Autoscroll: true,
 	})
 }
 

@@ -170,12 +170,7 @@ func (gui *Gui) handleLumineLanguageVersionSwitch(g *gocui.Gui, v *gocui.View) e
 		switchFunc = gui.Orchestrator.SwitchNodeVersion
 	} else if serviceType == "python" || strings.Contains(serviceType, "python") {
 		versions = []string{"3.9", "3.10", "3.11", "3.12"}
-		switchFunc = func(version string) error {
-			service.Version = version
-			service.Image = fmt.Sprintf("python:%s-alpine", version)
-			gui.Orchestrator.NotificationMgr.ShowSuccess(fmt.Sprintf("Switched to Python %s", version))
-			return nil
-		}
+		switchFunc = gui.Orchestrator.SwitchPythonVersion
 	} else {
 		return gui.createErrorPanel("Version switching not supported for this runtime")
 	}
