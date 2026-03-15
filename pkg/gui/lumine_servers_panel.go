@@ -381,3 +381,77 @@ func (gui *Gui) handleSettingProjectsDir() error {
 		return gui.Orchestrator.UpdateConfig(config)
 	})
 }
+
+// Handler for editing server settings
+func (gui *Gui) handleLumineServerEdit(g *gocui.Gui, v *gocui.View) error {
+	service, err := gui.Panels.LumineServers.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+
+	menuItems := []*types.MenuItem{
+		{
+			LabelColumns: []string{"Edit Port", fmt.Sprintf("Current: %d", service.Port)},
+			OnPress: func() error {
+				return gui.createPromptPanel(fmt.Sprintf("New Port for %s", service.Name), func(g *gocui.Gui, v *gocui.View) error {
+					portStr := gui.trimmedContent(v)
+					if portStr == "" {
+						return gui.createErrorPanel("Port cannot be empty")
+					}
+
+					var port int
+					if _, err := fmt.Sscanf(portStr, "%d", &port); err != nil {
+						return gui.createErrorPanel("Invalid port number")
+					}
+
+					// Update service port
+					service.Port = port
+					gui.Orchestrator.NotificationMgr.ShowSuccess(fmt.Sprintf("Port updated to %d", port))
+					return gui.refreshLumineServers()
+				})
+			},
+		},
+		{
+			LabelColumns: []string{"Edit Image", fmt.Sprintf("Current: %s", service.Image)},
+			OnPress: func() error {
+				return gui.createPromptPanel(fmt.Sprintf("New Image for %s", service.Name), func(g *gocui.Gui, v *gocui.View) error {
+					image := gui.trimmedContent(v)
+					if image == "" {
+						return gui.createErrorPanel("Image cannot be empty")
+					}
+
+					service.Image = image
+					gui.Orchestrator.NotificationMgr.ShowSuccess(fmt.Sprintf("Image updated to %s", image))
+					return gui.refreshLumineServers()
+				})
+			},
+		},
+		{
+			LabelColumns: []string{"Edit Config Path", service.ConfigPath},
+			OnPress: func() error {
+				return gui.createPromptPanel(fmt.Sprintf("Config Path for %s", service.Name), func(g *gocui.Gui, v *gocui.View) error {
+					path := gui.trimmedContent(v)
+					service.ConfigPath = path
+					gui.Orchestrator.NotificationMgr.ShowSuccess("Config path updated")
+					return gui.refreshLumineServers()
+				})
+			},
+		},
+		{
+			LabelColumns: []string{"Edit Log Path", service.LogPath},
+			OnPress: func() error {
+				return gui.createPromptPanel(fmt.Sprintf("Log Path for %s", service.Name), func(g *gocui.Gui, v *gocui.View) error {
+					path := gui.trimmedContent(v)
+					service.LogPath = path
+					gui.Orchestrator.NotificationMgr.ShowSuccess("Log path updated")
+					return gui.refreshLumineServers()
+				})
+			},
+		},
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: fmt.Sprintf("Edit %s Settings", service.Name),
+		Items: menuItems,
+	})
+}

@@ -51,7 +51,7 @@ type Panels struct {
 	LumineServers   *panels.SideListPanel[*lumine.Service]
 	LumineLanguages *panels.SideListPanel[*lumine.Service]
 	LumineProjects  *panels.SideListPanel[*lumine.Project]
-	LumineDatabases *panels.SideListPanel[*lumine.Database]
+	LumineDatabases *panels.SideListPanel[*lumine.Service]
 	Menu            *panels.SideListPanel[*types.MenuItem]
 }
 

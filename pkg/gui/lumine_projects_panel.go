@@ -241,3 +241,94 @@ func (gui *Gui) refreshLumineProjects() error {
 	
 	return gui.Panels.LumineProjects.RerenderList()
 }
+
+// Handler for editing project settings
+func (gui *Gui) handleLumineProjectEdit(g *gocui.Gui, v *gocui.View) error {
+	project, err := gui.Panels.LumineProjects.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+
+	menuItems := []*types.MenuItem{
+		{
+			LabelColumns: []string{"Edit PHP Version", fmt.Sprintf("Current: %s", project.PHPVersion)},
+			OnPress: func() error {
+				versions := []string{"7.4", "8.0", "8.1", "8.2", "8.3"}
+				versionItems := make([]*types.MenuItem, len(versions))
+				
+				for i, version := range versions {
+					v := version
+					versionItems[i] = &types.MenuItem{
+						LabelColumns: []string{fmt.Sprintf("PHP %s", v)},
+						OnPress: func() error {
+							project.PHPVersion = v
+							gui.Orchestrator.NotificationMgr.ShowSuccess(fmt.Sprintf("PHP version set to %s", v))
+							return gui.refreshLumineProjects()
+						},
+					}
+				}
+				
+				return gui.Menu(CreateMenuOptions{
+					Title: "Select PHP Version",
+					Items: versionItems,
+				})
+			},
+		},
+		{
+			LabelColumns: []string{"Edit Node Version", fmt.Sprintf("Current: %s", project.NodeVersion)},
+			OnPress: func() error {
+				versions := []string{"16", "18", "20", "21"}
+				versionItems := make([]*types.MenuItem, len(versions))
+				
+				for i, version := range versions {
+					v := version
+					versionItems[i] = &types.MenuItem{
+						LabelColumns: []string{fmt.Sprintf("Node.js %s", v)},
+						OnPress: func() error {
+							project.NodeVersion = v
+							gui.Orchestrator.NotificationMgr.ShowSuccess(fmt.Sprintf("Node.js version set to %s", v))
+							return gui.refreshLumineProjects()
+						},
+					}
+				}
+				
+				return gui.Menu(CreateMenuOptions{
+					Title: "Select Node.js Version",
+					Items: versionItems,
+				})
+			},
+		},
+		{
+			LabelColumns: []string{"Toggle SSL", fmt.Sprintf("Current: %v", project.SSLEnabled)},
+			OnPress: func() error {
+				project.SSLEnabled = !project.SSLEnabled
+				status := "disabled"
+				if project.SSLEnabled {
+					status = "enabled"
+				}
+				gui.Orchestrator.NotificationMgr.ShowSuccess(fmt.Sprintf("SSL %s", status))
+				return gui.refreshLumineProjects()
+			},
+		},
+		{
+			LabelColumns: []string{"Edit Path", project.Path},
+			OnPress: func() error {
+				return gui.createPromptPanel("Project Path", func(g *gocui.Gui, v *gocui.View) error {
+					path := gui.trimmedContent(v)
+					if path == "" {
+						return gui.createErrorPanel("Path cannot be empty")
+					}
+
+					project.Path = path
+					gui.Orchestrator.NotificationMgr.ShowSuccess("Path updated")
+					return gui.refreshLumineProjects()
+				})
+			},
+		},
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: fmt.Sprintf("Edit %s Settings", project.Name),
+		Items: menuItems,
+	})
+}
