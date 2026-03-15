@@ -86,12 +86,15 @@ func (gui *Gui) renderLumineLanguageVersions(service *lumine.Service) tasks.Task
 		var versions []string
 		serviceType := string(service.Type)
 		
-		if strings.Contains(serviceType, "php") {
+		if serviceType == "php-fpm" || strings.Contains(serviceType, "php") {
 			versions = []string{"7.4", "8.0", "8.1", "8.2", "8.3"}
 			output += "PHP Versions:\n"
-		} else if strings.Contains(serviceType, "node") {
-			versions = []string{"16", "18", "20", "21"}
+		} else if serviceType == "node" || strings.Contains(serviceType, "node") {
+			versions = []string{"16", "18", "20", "21", "22"}
 			output += "Node.js Versions:\n"
+		} else if serviceType == "python" || strings.Contains(serviceType, "python") {
+			versions = []string{"3.9", "3.10", "3.11", "3.12"}
+			output += "Python Versions:\n"
 		} else {
 			return "Version switching not available for this runtime"
 		}
@@ -159,12 +162,20 @@ func (gui *Gui) handleLumineLanguageVersionSwitch(g *gocui.Gui, v *gocui.View) e
 	var switchFunc func(string) error
 	serviceType := string(service.Type)
 
-	if strings.Contains(serviceType, "php") {
+	if serviceType == "php-fpm" || strings.Contains(serviceType, "php") {
 		versions = []string{"7.4", "8.0", "8.1", "8.2", "8.3"}
 		switchFunc = gui.Orchestrator.SwitchPHPVersion
-	} else if strings.Contains(serviceType, "node") {
-		versions = []string{"16", "18", "20", "21"}
+	} else if serviceType == "node" || strings.Contains(serviceType, "node") {
+		versions = []string{"16", "18", "20", "21", "22"}
 		switchFunc = gui.Orchestrator.SwitchNodeVersion
+	} else if serviceType == "python" || strings.Contains(serviceType, "python") {
+		versions = []string{"3.9", "3.10", "3.11", "3.12"}
+		switchFunc = func(version string) error {
+			service.Version = version
+			service.Image = fmt.Sprintf("python:%s-alpine", version)
+			gui.Orchestrator.NotificationMgr.ShowSuccess(fmt.Sprintf("Switched to Python %s", version))
+			return nil
+		}
 	} else {
 		return gui.createErrorPanel("Version switching not supported for this runtime")
 	}
@@ -192,7 +203,7 @@ func (gui *Gui) handleLumineLanguageVersionSwitch(g *gocui.Gui, v *gocui.View) e
 }
 
 func (gui *Gui) handleLumineLanguageAdd(g *gocui.Gui, v *gocui.View) error {
-	runtimeTypes := []string{"PHP", "Node.js", "Python", "Ruby", "Go"}
+	runtimeTypes := []string{"PHP", "Node.js", "Python", "Ruby", "Deno", "Bun"}
 	
 	menuItems := make([]*types.MenuItem, len(runtimeTypes))
 	for i, rt := range runtimeTypes {
@@ -200,25 +211,52 @@ func (gui *Gui) handleLumineLanguageAdd(g *gocui.Gui, v *gocui.View) error {
 		menuItems[i] = &types.MenuItem{
 			LabelColumns: []string{runtimeType},
 			OnPress: func() error {
-				return gui.createPromptPanel(fmt.Sprintf("%s Version (e.g., 8.3)", runtimeType), func(g *gocui.Gui, v *gocui.View) error {
+				defaultVersion := "latest"
+				if runtimeType == "PHP" {
+					defaultVersion = "8.3"
+				} else if runtimeType == "Node.js" {
+					defaultVersion = "20"
+				} else if runtimeType == "Python" {
+					defaultVersion = "3.12"
+				}
+				
+				return gui.createPromptPanel(fmt.Sprintf("%s Version (e.g., %s)", runtimeType, defaultVersion), func(g *gocui.Gui, v *gocui.View) error {
 					version := gui.trimmedContent(v)
 					if version == "" {
 						return gui.createErrorPanel("Version cannot be empty")
 					}
 
-					serviceName := fmt.Sprintf("lumine-%s-%s", strings.ToLower(runtimeType), version)
-					image := fmt.Sprintf("%s:%s-fpm-alpine", strings.ToLower(runtimeType), version)
+					serviceName := fmt.Sprintf("lumine-%s-%s", strings.ToLower(strings.ReplaceAll(runtimeType, ".", "")), version)
+					var image string
+					var port int
 					
-					if runtimeType == "Node.js" {
+					switch runtimeType {
+					case "PHP":
+						image = fmt.Sprintf("php:%s-fpm-alpine", version)
+						port = 9000
+					case "Node.js":
 						image = fmt.Sprintf("node:%s-alpine", version)
+						port = 3000
+					case "Python":
+						image = fmt.Sprintf("python:%s-alpine", version)
+						port = 8000
+					case "Ruby":
+						image = fmt.Sprintf("ruby:%s-alpine", version)
+						port = 4567
+					case "Deno":
+						image = fmt.Sprintf("denoland/deno:%s", version)
+						port = 8080
+					case "Bun":
+						image = fmt.Sprintf("oven/bun:%s", version)
+						port = 3000
 					}
 
 					customService := &lumine.CustomService{
 						Name:         serviceName,
 						Type:         "language",
 						Image:        image,
-						Port:         9000,
-						InternalPort: 9000,
+						Port:         port,
+						InternalPort: port,
 						Enabled:      true,
 						Environment:  make(map[string]string),
 						Volumes:      make(map[string]string),
