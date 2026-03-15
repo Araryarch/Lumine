@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Araryarch/Lumine/pkg/gui/panels"
 	"github.com/Araryarch/Lumine/pkg/gui/types"
@@ -263,4 +264,213 @@ func (gui *Gui) refreshLumineServices() error {
 	gui.Panels.LumineServices.SetItems(services)
 
 	return gui.Panels.LumineServices.RerenderList()
+}
+
+// Handler for adding custom service
+func (gui *Gui) handleLumineServiceAdd(g *gocui.Gui, v *gocui.View) error {
+	return gui.createPromptPanel("Service Name (e.g., lumine-redis)", func(g *gocui.Gui, v *gocui.View) error {
+		serviceName := gui.trimmedContent(v)
+		if serviceName == "" {
+			return gui.createErrorPanel("Service name cannot be empty")
+		}
+
+		return gui.createPromptPanel("Docker Image (e.g., redis:alpine)", func(g *gocui.Gui, v *gocui.View) error {
+			image := gui.trimmedContent(v)
+			if image == "" {
+				return gui.createErrorPanel("Image cannot be empty")
+			}
+
+			return gui.createPromptPanel("Port (e.g., 6379)", func(g *gocui.Gui, v *gocui.View) error {
+				portStr := gui.trimmedContent(v)
+				if portStr == "" {
+					return gui.createErrorPanel("Port cannot be empty")
+				}
+
+				var port int
+				if _, err := fmt.Sscanf(portStr, "%d", &port); err != nil {
+					return gui.createErrorPanel("Invalid port number")
+				}
+
+				customService := &lumine.CustomService{
+					Name:         serviceName,
+					Type:         "custom",
+					Image:        image,
+					Port:         port,
+					InternalPort: port,
+					Enabled:      true,
+					Environment:  make(map[string]string),
+					Volumes:      make(map[string]string),
+				}
+
+				return gui.WithWaitingStatus("Adding service...", func() error {
+					if err := gui.Orchestrator.AddCustomService(customService); err != nil {
+						return gui.createErrorPanel(err.Error())
+					}
+					return gui.refreshLumineServices()
+				})
+			})
+		})
+	})
+}
+
+// Handler for removing custom service
+func (gui *Gui) handleLumineServiceRemove(g *gocui.Gui, v *gocui.View) error {
+	service, err := gui.Panels.LumineServices.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+
+	// Check if it's a custom service
+	if !strings.HasPrefix(service.Name, "lumine-") {
+		return gui.createErrorPanel("Cannot remove built-in services")
+	}
+
+	return gui.createConfirmationPanel("Confirm", fmt.Sprintf("Remove custom service '%s'?", service.Name), func(g *gocui.Gui, v *gocui.View) error {
+		return gui.WithWaitingStatus("Removing service...", func() error {
+			if err := gui.Orchestrator.RemoveCustomService(service.Name); err != nil {
+				return gui.createErrorPanel(err.Error())
+			}
+			return gui.refreshLumineServices()
+		})
+	}, nil)
+}
+
+// Handler for opening settings
+func (gui *Gui) handleLumineSettings(g *gocui.Gui, v *gocui.View) error {
+	config := gui.Orchestrator.ConfigManager.Get()
+
+	menuItems := []*types.MenuItem{
+		{
+			LabelColumns: []string{"Default PHP Version", config.DefaultPHPVersion},
+			OnPress: func() error {
+				return gui.handleSettingPHPVersion()
+			},
+		},
+		{
+			LabelColumns: []string{"Default Node Version", config.DefaultNodeVersion},
+			OnPress: func() error {
+				return gui.handleSettingNodeVersion()
+			},
+		},
+		{
+			LabelColumns: []string{"Preferred Web Server", config.PreferredWebServer},
+			OnPress: func() error {
+				return gui.handleSettingWebServer()
+			},
+		},
+		{
+			LabelColumns: []string{"Auto Start Services", fmt.Sprintf("%v", config.AutoStartServices)},
+			OnPress: func() error {
+				return gui.handleToggleAutoStart()
+			},
+		},
+		{
+			LabelColumns: []string{"Enable Auto SSL", fmt.Sprintf("%v", config.EnableAutoSSL)},
+			OnPress: func() error {
+				return gui.handleToggleAutoSSL()
+			},
+		},
+		{
+			LabelColumns: []string{"Projects Directory", config.ProjectsDirectory},
+			OnPress: func() error {
+				return gui.handleSettingProjectsDir()
+			},
+		},
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: "Lumine Settings",
+		Items: menuItems,
+	})
+}
+
+func (gui *Gui) handleSettingPHPVersion() error {
+	versions := []string{"7.4", "8.0", "8.1", "8.2", "8.3"}
+	menuItems := make([]*types.MenuItem, len(versions))
+
+	for i, version := range versions {
+		v := version
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{fmt.Sprintf("PHP %s", v)},
+			OnPress: func() error {
+				config := gui.Orchestrator.ConfigManager.Get()
+				config.DefaultPHPVersion = v
+				return gui.Orchestrator.UpdateConfig(config)
+			},
+		}
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: "Select Default PHP Version",
+		Items: menuItems,
+	})
+}
+
+func (gui *Gui) handleSettingNodeVersion() error {
+	versions := []string{"16", "18", "20", "21"}
+	menuItems := make([]*types.MenuItem, len(versions))
+
+	for i, version := range versions {
+		v := version
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{fmt.Sprintf("Node.js %s", v)},
+			OnPress: func() error {
+				config := gui.Orchestrator.ConfigManager.Get()
+				config.DefaultNodeVersion = v
+				return gui.Orchestrator.UpdateConfig(config)
+			},
+		}
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: "Select Default Node.js Version",
+		Items: menuItems,
+	})
+}
+
+func (gui *Gui) handleSettingWebServer() error {
+	servers := []string{"nginx", "apache", "caddy"}
+	menuItems := make([]*types.MenuItem, len(servers))
+
+	for i, server := range servers {
+		s := server
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{s},
+			OnPress: func() error {
+				config := gui.Orchestrator.ConfigManager.Get()
+				config.PreferredWebServer = s
+				return gui.Orchestrator.UpdateConfig(config)
+			},
+		}
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: "Select Preferred Web Server",
+		Items: menuItems,
+	})
+}
+
+func (gui *Gui) handleToggleAutoStart() error {
+	config := gui.Orchestrator.ConfigManager.Get()
+	config.AutoStartServices = !config.AutoStartServices
+	return gui.Orchestrator.UpdateConfig(config)
+}
+
+func (gui *Gui) handleToggleAutoSSL() error {
+	config := gui.Orchestrator.ConfigManager.Get()
+	config.EnableAutoSSL = !config.EnableAutoSSL
+	return gui.Orchestrator.UpdateConfig(config)
+}
+
+func (gui *Gui) handleSettingProjectsDir() error {
+	return gui.createPromptPanel("Projects Directory Path", func(g *gocui.Gui, v *gocui.View) error {
+		path := gui.trimmedContent(v)
+		if path == "" {
+			return gui.createErrorPanel("Path cannot be empty")
+		}
+
+		config := gui.Orchestrator.ConfigManager.Get()
+		config.ProjectsDirectory = path
+		return gui.Orchestrator.UpdateConfig(config)
+	})
 }

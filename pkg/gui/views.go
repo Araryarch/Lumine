@@ -27,7 +27,9 @@ func hideUnderScores() bool {
 
 type Views struct {
 	// Lumine panels
-	LumineServices  *gocui.View
+	LumineDocker    *gocui.View
+	LumineServers   *gocui.View
+	LumineLanguages *gocui.View
 	LumineProjects  *gocui.View
 	LumineDatabases *gocui.View
 
@@ -79,6 +81,7 @@ func (gui *Gui) orderedViewNameMappings() []viewNameMapping {
 		{viewPtr: &gui.Views.Networks, name: "networks", autoPosition: true},
 
 		// Lumine views
+		{viewPtr: &gui.Views.LumineDocker, name: "lumineDocker", autoPosition: true},
 		{viewPtr: &gui.Views.LumineServices, name: "lumineServices", autoPosition: true},
 		{viewPtr: &gui.Views.LumineProjects, name: "lumineProjects", autoPosition: true},
 		{viewPtr: &gui.Views.LumineDatabases, name: "lumineDatabases", autoPosition: true},
@@ -193,19 +196,24 @@ func (gui *Gui) createAllViews() error {
 	// Configure Lumine views
 	selectedLineBgColor = GetGocuiStyle(gui.Config.UserConfig.Gui.Theme.SelectedLineBgColor)
 
+	gui.Views.LumineDocker.Highlight = true
+	gui.Views.LumineDocker.Title = "Docker Control"
+	gui.Views.LumineDocker.TitlePrefix = "[1]"
+	gui.Views.LumineDocker.SelBgColor = selectedLineBgColor
+
 	gui.Views.LumineServices.Highlight = true
-	gui.Views.LumineServices.Title = "Lumine Services"
-	gui.Views.LumineServices.TitlePrefix = "[1]"
+	gui.Views.LumineServices.Title = "Services"
+	gui.Views.LumineServices.TitlePrefix = "[2]"
 	gui.Views.LumineServices.SelBgColor = selectedLineBgColor
 
 	gui.Views.LumineProjects.Highlight = true
-	gui.Views.LumineProjects.Title = "Lumine Projects"
-	gui.Views.LumineProjects.TitlePrefix = "[2]"
+	gui.Views.LumineProjects.Title = "Projects"
+	gui.Views.LumineProjects.TitlePrefix = "[3]"
 	gui.Views.LumineProjects.SelBgColor = selectedLineBgColor
 
 	gui.Views.LumineDatabases.Highlight = true
-	gui.Views.LumineDatabases.Title = "Lumine Databases"
-	gui.Views.LumineDatabases.TitlePrefix = "[3]"
+	gui.Views.LumineDatabases.Title = "Databases"
+	gui.Views.LumineDatabases.TitlePrefix = "[4]"
 	gui.Views.LumineDatabases.SelBgColor = selectedLineBgColor
 
 	return nil

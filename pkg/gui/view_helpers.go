@@ -366,8 +366,9 @@ func (gui *Gui) allSidePanels() []panels.ISideListPanel {
 	basePanels := []panels.ISideListPanel{}
 	
 	// Add Lumine panels
-	if gui.Orchestrator != nil && gui.Panels.LumineServices != nil {
+	if gui.Orchestrator != nil && gui.Panels.LumineDocker != nil {
 		basePanels = append(basePanels,
+			gui.Panels.LumineDocker,
 			gui.Panels.LumineServices,
 			gui.Panels.LumineProjects,
 			gui.Panels.LumineDatabases,

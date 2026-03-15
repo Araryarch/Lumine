@@ -47,6 +47,7 @@ type Gui struct {
 }
 
 type Panels struct {
+	LumineDocker    *panels.SideListPanel[*DockerControl]
 	LumineServices  *panels.SideListPanel[*lumine.Service]
 	LumineProjects  *panels.SideListPanel[*lumine.Project]
 	LumineDatabases *panels.SideListPanel[*lumine.Database]
@@ -155,6 +156,9 @@ func NewGui(log *logrus.Entry, oSCommand *commands.OSCommand, tr *i18n.Translati
 		taskManager:   tasks.NewTaskManager(log, tr),
 		ErrorChan:     errorChan,
 		Orchestrator:  orchestrator,
+		DockerCommand: &DockerCommand{
+			InDockerComposeProject: false,
+		},
 	}
 
 	deadlock.Opts.Disable = !gui.Config.Debug
@@ -299,6 +303,7 @@ func (gui *Gui) setPanels() {
 
 	// Initialize Lumine panels
 	if gui.Orchestrator != nil {
+		gui.Panels.LumineDocker = gui.getLumineDockerPanel()
 		gui.Panels.LumineServices = gui.getLumineServicesPanel()
 		gui.Panels.LumineProjects = gui.getLumineProjectsPanel()
 		gui.Panels.LumineDatabases = gui.getLumineDatabasesPanel()
@@ -308,6 +313,11 @@ func (gui *Gui) setPanels() {
 func (gui *Gui) refresh() {
 	// Refresh Lumine panels
 	if gui.Orchestrator != nil {
+		go func() {
+			if err := gui.refreshDockerControl(); err != nil {
+				gui.Log.Error(err)
+			}
+		}()
 		go func() {
 			if err := gui.refreshLumineServices(); err != nil {
 				gui.Log.Error(err)
@@ -428,7 +438,7 @@ func (gui *Gui) FilterString(view *gocui.View) string {
 }
 
 func (gui *Gui) initiallyFocusedViewName() string {
-	return "lumineServices"
+	return "lumineDocker"
 }
 
 func (gui *Gui) IgnoreStrings() []string {

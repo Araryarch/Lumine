@@ -236,8 +236,47 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 		},
 	}
 
+	// Lumine Docker Control panel bindings
+	lumineDockerBindings := []*Binding{
+		{
+			ViewName:    "lumineDocker",
+			Key:         's',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleDockerStart,
+			Description: "Start Docker",
+		},
+		{
+			ViewName:    "lumineDocker",
+			Key:         'S',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleDockerStop,
+			Description: "Stop Docker",
+		},
+		{
+			ViewName:    "lumineDocker",
+			Key:         'r',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleDockerRestart,
+			Description: "Restart Docker",
+		},
+	}
+
 	// Lumine Services panel bindings
 	lumineServicesBindings := []*Binding{
+		{
+			ViewName:    "lumineServices",
+			Key:         'n',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineServiceAdd,
+			Description: "New Service",
+		},
+		{
+			ViewName:    "lumineServices",
+			Key:         'c',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineSettings,
+			Description: "Settings",
+		},
 		{
 			ViewName:    "lumineServices",
 			Key:         's',
@@ -272,6 +311,13 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleLumineServiceHealth,
 			Description: "Health Check",
+		},
+		{
+			ViewName:    "lumineServices",
+			Key:         'x',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineServiceRemove,
+			Description: "Remove Service",
 		},
 	}
 
@@ -318,10 +364,10 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 	lumineDatabasesBindings := []*Binding{
 		{
 			ViewName:    "lumineDatabases",
-			Key:         'c',
+			Key:         'n',
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleLumineDatabaseCreate,
-			Description: "Create Database",
+			Description: "New Database",
 		},
 		{
 			ViewName:    "lumineDatabases",
@@ -346,6 +392,7 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 		},
 	}
 
+	bindings = append(bindings, lumineDockerBindings...)
 	bindings = append(bindings, lumineServicesBindings...)
 	bindings = append(bindings, lumineProjectsBindings...)
 	bindings = append(bindings, lumineDatabasesBindings...)
