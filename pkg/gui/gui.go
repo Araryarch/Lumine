@@ -284,8 +284,11 @@ func (gui *Gui) Run() error {
 
 		// Lumine refresh cycles
 		if gui.Orchestrator != nil {
-			gui.goEvery(time.Millisecond*2000, gui.refreshLumineServices)
+			gui.goEvery(time.Millisecond*2000, gui.refreshDockerControl)
+			gui.goEvery(time.Millisecond*2000, gui.refreshLumineServers)
+			gui.goEvery(time.Millisecond*2000, gui.refreshLumineLanguages)
 			gui.goEvery(time.Millisecond*5000, gui.refreshLumineProjects)
+			gui.goEvery(time.Millisecond*3000, gui.refreshLumineDatabases)
 			gui.goEvery(time.Millisecond*1000, gui.refreshNotifications)
 		}
 	}()

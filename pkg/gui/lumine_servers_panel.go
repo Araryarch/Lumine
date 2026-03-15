@@ -2,7 +2,6 @@ package gui
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/Araryarch/Lumine/pkg/gui/panels"
 	"github.com/Araryarch/Lumine/pkg/gui/types"
@@ -241,4 +240,144 @@ func (gui *Gui) refreshLumineServers() error {
 	servers := gui.Orchestrator.ServiceManager.ListServerServices()
 	gui.Panels.LumineServers.SetItems(servers)
 	return gui.Panels.LumineServers.RerenderList()
+}
+
+// Handler for opening settings
+func (gui *Gui) handleLumineSettings(g *gocui.Gui, v *gocui.View) error {
+	config := gui.Orchestrator.ConfigManager.Get()
+
+	menuItems := []*types.MenuItem{
+		{
+			LabelColumns: []string{"Default PHP Version", config.DefaultPHPVersion},
+			OnPress: func() error {
+				return gui.handleSettingPHPVersion()
+			},
+		},
+		{
+			LabelColumns: []string{"Default Node Version", config.DefaultNodeVersion},
+			OnPress: func() error {
+				return gui.handleSettingNodeVersion()
+			},
+		},
+		{
+			LabelColumns: []string{"Preferred Web Server", config.PreferredWebServer},
+			OnPress: func() error {
+				return gui.handleSettingWebServer()
+			},
+		},
+		{
+			LabelColumns: []string{"Auto Start Services", fmt.Sprintf("%v", config.AutoStartServices)},
+			OnPress: func() error {
+				return gui.handleToggleAutoStart()
+			},
+		},
+		{
+			LabelColumns: []string{"Enable Auto SSL", fmt.Sprintf("%v", config.EnableAutoSSL)},
+			OnPress: func() error {
+				return gui.handleToggleAutoSSL()
+			},
+		},
+		{
+			LabelColumns: []string{"Projects Directory", config.ProjectsDirectory},
+			OnPress: func() error {
+				return gui.handleSettingProjectsDir()
+			},
+		},
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: "Lumine Settings",
+		Items: menuItems,
+	})
+}
+
+func (gui *Gui) handleSettingPHPVersion() error {
+	versions := []string{"7.4", "8.0", "8.1", "8.2", "8.3"}
+	menuItems := make([]*types.MenuItem, len(versions))
+
+	for i, version := range versions {
+		v := version
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{fmt.Sprintf("PHP %s", v)},
+			OnPress: func() error {
+				config := gui.Orchestrator.ConfigManager.Get()
+				config.DefaultPHPVersion = v
+				return gui.Orchestrator.UpdateConfig(config)
+			},
+		}
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: "Select Default PHP Version",
+		Items: menuItems,
+	})
+}
+
+func (gui *Gui) handleSettingNodeVersion() error {
+	versions := []string{"16", "18", "20", "21"}
+	menuItems := make([]*types.MenuItem, len(versions))
+
+	for i, version := range versions {
+		v := version
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{fmt.Sprintf("Node.js %s", v)},
+			OnPress: func() error {
+				config := gui.Orchestrator.ConfigManager.Get()
+				config.DefaultNodeVersion = v
+				return gui.Orchestrator.UpdateConfig(config)
+			},
+		}
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: "Select Default Node.js Version",
+		Items: menuItems,
+	})
+}
+
+func (gui *Gui) handleSettingWebServer() error {
+	servers := []string{"nginx", "apache", "caddy"}
+	menuItems := make([]*types.MenuItem, len(servers))
+
+	for i, server := range servers {
+		s := server
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{s},
+			OnPress: func() error {
+				config := gui.Orchestrator.ConfigManager.Get()
+				config.PreferredWebServer = s
+				return gui.Orchestrator.UpdateConfig(config)
+			},
+		}
+	}
+
+	return gui.Menu(CreateMenuOptions{
+		Title: "Select Preferred Web Server",
+		Items: menuItems,
+	})
+}
+
+func (gui *Gui) handleToggleAutoStart() error {
+	config := gui.Orchestrator.ConfigManager.Get()
+	config.AutoStartServices = !config.AutoStartServices
+	return gui.Orchestrator.UpdateConfig(config)
+}
+
+func (gui *Gui) handleToggleAutoSSL() error {
+	config := gui.Orchestrator.ConfigManager.Get()
+	config.EnableAutoSSL = !config.EnableAutoSSL
+	return gui.Orchestrator.UpdateConfig(config)
+}
+
+func (gui *Gui) handleSettingProjectsDir() error {
+	return gui.createPromptPanel("Projects Directory Path", func(g *gocui.Gui, v *gocui.View) error {
+		path := gui.trimmedContent(v)
+		if path == "" {
+			return gui.createErrorPanel("Path cannot be empty")
+		}
+
+		config := gui.Orchestrator.ConfigManager.Get()
+		config.ProjectsDirectory = path
+		return gui.Orchestrator.UpdateConfig(config)
+	})
 }

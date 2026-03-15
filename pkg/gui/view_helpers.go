@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/jesseduffield/gocui"
 	"github.com/Araryarch/Lumine/pkg/gui/panels"
 	"github.com/Araryarch/Lumine/pkg/utils"
@@ -385,4 +386,17 @@ func (gui *Gui) allListPanels() []panels.ISideListPanel {
 
 func (gui *Gui) IsCurrentView(view *gocui.View) bool {
 	return view == gui.CurrentView()
+}
+
+func (gui *Gui) getColoredStatus(status string) string {
+	switch status {
+	case "running":
+		return utils.ColoredString(status, color.FgGreen)
+	case "stopped":
+		return utils.ColoredString(status, color.FgYellow)
+	case "error":
+		return utils.ColoredString(status, color.FgRed)
+	default:
+		return status
+	}
 }

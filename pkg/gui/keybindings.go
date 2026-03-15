@@ -419,9 +419,11 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 
 	// Panel navigation bindings
 	bindings = append(bindings, []*Binding{
-		{Handler: gui.handleGoTo(gui.Panels.LumineServices.View), Key: '1', Description: "Focus Services"},
-		{Handler: gui.handleGoTo(gui.Panels.LumineProjects.View), Key: '2', Description: "Focus Projects"},
-		{Handler: gui.handleGoTo(gui.Panels.LumineDatabases.View), Key: '3', Description: "Focus Databases"},
+		{Handler: gui.handleGoTo(gui.Panels.LumineDocker.View), Key: '1', Description: "Focus Docker"},
+		{Handler: gui.handleGoTo(gui.Panels.LumineServers.View), Key: '2', Description: "Focus Servers"},
+		{Handler: gui.handleGoTo(gui.Panels.LumineLanguages.View), Key: '3', Description: "Focus Languages"},
+		{Handler: gui.handleGoTo(gui.Panels.LumineProjects.View), Key: '4', Description: "Focus Projects"},
+		{Handler: gui.handleGoTo(gui.Panels.LumineDatabases.View), Key: '5', Description: "Focus Databases"},
 	}...)
 
 	// Add up/down/click bindings for all panels
