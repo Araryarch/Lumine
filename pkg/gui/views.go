@@ -82,7 +82,8 @@ func (gui *Gui) orderedViewNameMappings() []viewNameMapping {
 
 		// Lumine views
 		{viewPtr: &gui.Views.LumineDocker, name: "lumineDocker", autoPosition: true},
-		{viewPtr: &gui.Views.LumineServices, name: "lumineServices", autoPosition: true},
+		{viewPtr: &gui.Views.LumineServers, name: "lumineServers", autoPosition: true},
+		{viewPtr: &gui.Views.LumineLanguages, name: "lumineLanguages", autoPosition: true},
 		{viewPtr: &gui.Views.LumineProjects, name: "lumineProjects", autoPosition: true},
 		{viewPtr: &gui.Views.LumineDatabases, name: "lumineDatabases", autoPosition: true},
 
@@ -201,19 +202,24 @@ func (gui *Gui) createAllViews() error {
 	gui.Views.LumineDocker.TitlePrefix = "[1]"
 	gui.Views.LumineDocker.SelBgColor = selectedLineBgColor
 
-	gui.Views.LumineServices.Highlight = true
-	gui.Views.LumineServices.Title = "Services"
-	gui.Views.LumineServices.TitlePrefix = "[2]"
-	gui.Views.LumineServices.SelBgColor = selectedLineBgColor
+	gui.Views.LumineServers.Highlight = true
+	gui.Views.LumineServers.Title = "Servers"
+	gui.Views.LumineServers.TitlePrefix = "[2]"
+	gui.Views.LumineServers.SelBgColor = selectedLineBgColor
+
+	gui.Views.LumineLanguages.Highlight = true
+	gui.Views.LumineLanguages.Title = "Languages"
+	gui.Views.LumineLanguages.TitlePrefix = "[3]"
+	gui.Views.LumineLanguages.SelBgColor = selectedLineBgColor
 
 	gui.Views.LumineProjects.Highlight = true
 	gui.Views.LumineProjects.Title = "Projects"
-	gui.Views.LumineProjects.TitlePrefix = "[3]"
+	gui.Views.LumineProjects.TitlePrefix = "[4]"
 	gui.Views.LumineProjects.SelBgColor = selectedLineBgColor
 
 	gui.Views.LumineDatabases.Highlight = true
 	gui.Views.LumineDatabases.Title = "Databases"
-	gui.Views.LumineDatabases.TitlePrefix = "[4]"
+	gui.Views.LumineDatabases.TitlePrefix = "[5]"
 	gui.Views.LumineDatabases.SelBgColor = selectedLineBgColor
 
 	return nil

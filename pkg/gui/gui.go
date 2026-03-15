@@ -48,7 +48,8 @@ type Gui struct {
 
 type Panels struct {
 	LumineDocker    *panels.SideListPanel[*DockerControl]
-	LumineServices  *panels.SideListPanel[*lumine.Service]
+	LumineServers   *panels.SideListPanel[*lumine.Service]
+	LumineLanguages *panels.SideListPanel[*lumine.Service]
 	LumineProjects  *panels.SideListPanel[*lumine.Project]
 	LumineDatabases *panels.SideListPanel[*lumine.Database]
 	Menu            *panels.SideListPanel[*types.MenuItem]
@@ -304,7 +305,8 @@ func (gui *Gui) setPanels() {
 	// Initialize Lumine panels
 	if gui.Orchestrator != nil {
 		gui.Panels.LumineDocker = gui.getLumineDockerPanel()
-		gui.Panels.LumineServices = gui.getLumineServicesPanel()
+		gui.Panels.LumineServers = gui.getLumineServersPanel()
+		gui.Panels.LumineLanguages = gui.getLumineLanguagesPanel()
 		gui.Panels.LumineProjects = gui.getLumineProjectsPanel()
 		gui.Panels.LumineDatabases = gui.getLumineDatabasesPanel()
 	}
@@ -319,7 +321,12 @@ func (gui *Gui) refresh() {
 			}
 		}()
 		go func() {
-			if err := gui.refreshLumineServices(); err != nil {
+			if err := gui.refreshLumineServers(); err != nil {
+				gui.Log.Error(err)
+			}
+		}()
+		go func() {
+			if err := gui.refreshLumineLanguages(); err != nil {
 				gui.Log.Error(err)
 			}
 		}()

@@ -261,65 +261,84 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 		},
 	}
 
-	// Lumine Services panel bindings
-	lumineServicesBindings := []*Binding{
+	// Lumine Servers panel bindings
+	lumineServersBindings := []*Binding{
 		{
-			ViewName:    "lumineServices",
+			ViewName:    "lumineServers",
 			Key:         'n',
 			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineServiceAdd,
-			Description: "New Service",
+			Handler:     gui.handleLumineServerAdd,
+			Description: "New Server",
 		},
 		{
-			ViewName:    "lumineServices",
+			ViewName:    "lumineServers",
+			Key:         's',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineServerStart,
+			Description: "Start Server",
+		},
+		{
+			ViewName:    "lumineServers",
+			Key:         'S',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineServerStop,
+			Description: "Stop Server",
+		},
+		{
+			ViewName:    "lumineServers",
+			Key:         'r',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineServerRestart,
+			Description: "Restart Server",
+		},
+		{
+			ViewName:    "lumineServers",
+			Key:         'x',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineServerRemove,
+			Description: "Remove Server",
+		},
+		{
+			ViewName:    "lumineServers",
 			Key:         'c',
 			Modifier:    gocui.ModNone,
 			Handler:     gui.handleLumineSettings,
 			Description: "Settings",
 		},
+	}
+
+	// Lumine Languages panel bindings
+	lumineLanguagesBindings := []*Binding{
 		{
-			ViewName:    "lumineServices",
+			ViewName:    "lumineLanguages",
+			Key:         'n',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineLanguageAdd,
+			Description: "New Runtime",
+		},
+		{
+			ViewName:    "lumineLanguages",
 			Key:         's',
 			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineServiceStart,
-			Description: "Start Service",
+			Handler:     gui.handleLumineLanguageStart,
+			Description: "Start Runtime",
 		},
 		{
-			ViewName:    "lumineServices",
+			ViewName:    "lumineLanguages",
 			Key:         'S',
 			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineServiceStop,
-			Description: "Stop Service",
+			Handler:     gui.handleLumineLanguageStop,
+			Description: "Stop Runtime",
 		},
 		{
-			ViewName:    "lumineServices",
-			Key:         'r',
-			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineServiceRestart,
-			Description: "Restart Service",
-		},
-		{
-			ViewName:    "lumineServices",
+			ViewName:    "lumineLanguages",
 			Key:         'v',
 			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineServiceVersionSwitch,
+			Handler:     gui.handleLumineLanguageVersionSwitch,
 			Description: "Switch Version",
 		},
-		{
-			ViewName:    "lumineServices",
-			Key:         'H',
-			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineServiceHealth,
-			Description: "Health Check",
-		},
-		{
-			ViewName:    "lumineServices",
-			Key:         'x',
-			Modifier:    gocui.ModNone,
-			Handler:     gui.handleLumineServiceRemove,
-			Description: "Remove Service",
-		},
 	}
+
 
 	// Lumine Projects panel bindings
 	lumineProjectsBindings := []*Binding{
@@ -393,7 +412,8 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 	}
 
 	bindings = append(bindings, lumineDockerBindings...)
-	bindings = append(bindings, lumineServicesBindings...)
+	bindings = append(bindings, lumineServersBindings...)
+	bindings = append(bindings, lumineLanguagesBindings...)
 	bindings = append(bindings, lumineProjectsBindings...)
 	bindings = append(bindings, lumineDatabasesBindings...)
 

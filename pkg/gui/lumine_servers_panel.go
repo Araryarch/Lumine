@@ -238,18 +238,7 @@ func (gui *Gui) refreshLumineServers() error {
 		return nil
 	}
 
-	allServices := gui.Orchestrator.ServiceManager.ListServices()
-	
-	// Filter only server services
-	servers := []*lumine.Service{}
-	for _, service := range allServices {
-		serviceType := string(service.Type)
-		if serviceType == "nginx" || serviceType == "apache" || serviceType == "caddy" || 
-		   serviceType == "server" || strings.Contains(serviceType, "web") {
-			servers = append(servers, service)
-		}
-	}
-
+	servers := gui.Orchestrator.ServiceManager.ListServerServices()
 	gui.Panels.LumineServers.SetItems(servers)
 	return gui.Panels.LumineServers.RerenderList()
 }

@@ -246,19 +246,7 @@ func (gui *Gui) refreshLumineLanguages() error {
 		return nil
 	}
 
-	allServices := gui.Orchestrator.ServiceManager.ListServices()
-	
-	// Filter only language/runtime services
-	languages := []*lumine.Service{}
-	for _, service := range allServices {
-		serviceType := string(service.Type)
-		if serviceType == "php-fpm" || serviceType == "language" || 
-		   strings.Contains(serviceType, "php") || strings.Contains(serviceType, "node") ||
-		   strings.Contains(serviceType, "python") || strings.Contains(serviceType, "ruby") {
-			languages = append(languages, service)
-		}
-	}
-
+	languages := gui.Orchestrator.ServiceManager.ListLanguageServices()
 	gui.Panels.LumineLanguages.SetItems(languages)
 	return gui.Panels.LumineLanguages.RerenderList()
 }
