@@ -17,7 +17,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.22'
+          cache: true
+
+      - name: Verify and fix go.mod
+        run: |
+          go mod tidy
+          go mod verify
 
       - name: Get dependencies
         run: go mod download
@@ -49,7 +55,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.22'
+          cache: true
+
+      - name: Verify and fix go.mod
+        run: |
+          go mod tidy
+          go mod verify
 
       - name: Get dependencies
         run: go mod download
