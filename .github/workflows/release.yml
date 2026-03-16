@@ -1,0 +1,142 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Release
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          # Linux
+          - goos: linux
+            goarch: amd64
+            output: lumine-linux-amd64
+          - goos: linux
+            goarch: arm64
+            output: lumine-linux-arm64
+          - goos: linux
+            goarch: 386
+            output: lumine-linux-386
+          
+          # macOS
+          - goos: darwin
+            goarch: amd64
+            output: lumine-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            output: lumine-darwin-arm64
+          
+          # Windows
+          - goos: windows
+            goarch: amd64
+            output: lumine-windows-amd64.exe
+          - goos: windows
+            goarch: 386
+            output: lumine-windows-386.exe
+          - goos: windows
+            goarch: arm64
+            output: lumine-windows-arm64.exe
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Get dependencies
+        run: go mod download
+
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -ldflags="-s -w -X main.version=${{ github.ref_name }}" -o ${{ matrix.output }} .
+
+      - name: Compress binary (Linux/macOS)
+        if: matrix.goos != 'windows'
+        run: |
+          tar -czf ${{ matrix.output }}.tar.gz ${{ matrix.output }}
+          sha256sum ${{ matrix.output }}.tar.gz > ${{ matrix.output }}.tar.gz.sha256
+
+      - name: Compress binary (Windows)
+        if: matrix.goos == 'windows'
+        run: |
+          zip ${{ matrix.output }}.zip ${{ matrix.output }}
+          sha256sum ${{ matrix.output }}.zip > ${{ matrix.output }}.zip.sha256
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output }}
+          path: |
+            ${{ matrix.output }}*
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release assets
+        run: |
+          mkdir -p release
+          find artifacts -type f -exec cp {} release/ \;
+          ls -lah release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## Lumine - Local Development Environment Manager
+            
+            ### Installation
+            
+            **Linux/macOS:**
+            ```bash
+            # Download the appropriate binary for your system
+            # Extract and move to PATH
+            tar -xzf lumine-*.tar.gz
+            sudo mv lumine-* /usr/local/bin/lumine
+            sudo chmod +x /usr/local/bin/lumine
+            ```
+            
+            **Windows:**
+            ```powershell
+            # Extract the .zip file
+            # Add the directory to your PATH or move lumine.exe to a directory in PATH
+            ```
+            
+            ### Quick Start
+            ```bash
+            lumine
+            ```
+            
+            ### What's Changed
+            See the full changelog below.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
