@@ -23,6 +23,11 @@ func (gui *Gui) getLumineProjectsPanel() *panels.SideListPanel[*lumine.Project] 
 						Render: gui.renderLumineProjectInfo,
 					},
 					{
+						Key:    "network",
+						Title:  "Network",
+						Render: gui.renderLumineProjectNetwork,
+					},
+					{
 						Key:    "dependencies",
 						Title:  "Dependencies",
 						Render: gui.renderLumineProjectDependencies,
@@ -58,11 +63,16 @@ func (gui *Gui) getLumineProjectsPanel() *panels.SideListPanel[*lumine.Project] 
 				tunnelIndicator = utils.ColoredString("🌐", color.FgCyan)
 			}
 			
+			networkIndicator := ""
+			if project.NetworkName != "" {
+				networkIndicator = utils.ColoredString("🔗", color.FgYellow)
+			}
+			
 			return []string{
 				utils.ColoredString(project.Name, color.FgCyan),
 				string(project.Type),
 				project.URL,
-				sslIndicator + tunnelIndicator,
+				sslIndicator + tunnelIndicator + networkIndicator,
 			}
 		},
 	}
@@ -126,6 +136,39 @@ func (gui *Gui) renderLumineProjectTunnel(project *lumine.Project) tasks.TaskFun
 	})
 }
 
+func (gui *Gui) renderLumineProjectNetwork(project *lumine.Project) tasks.TaskFunc {
+	return gui.NewSimpleRenderStringTask(func() string {
+		if project.NetworkName == "" {
+			return utils.ColoredString("⚠ No isolated network configured\n\n", color.FgYellow) +
+				"This project is not using an isolated Docker network.\n" +
+				"Services can communicate with all other containers.\n\n" +
+				"Press 'N' to create an isolated network for better security."
+		}
+		
+		output := utils.ColoredString("🔗 Isolated Network Active\n\n", color.FgGreen)
+		output += utils.WithPadding("Network Name: ", 20) + utils.ColoredString(project.NetworkName, color.FgCyan) + "\n"
+		output += utils.WithPadding("Project: ", 20) + project.Name + "\n\n"
+		
+		output += utils.ColoredString("Benefits:\n", color.FgYellow)
+		output += "  • Services isolated from other projects\n"
+		output += "  • Better security and resource management\n"
+		output += "  • Services can communicate using container names\n"
+		output += "  • No port conflicts between projects\n\n"
+		
+		// Get network info
+		networkInfo, err := gui.Orchestrator.GetProjectNetworkInfo(project.Name)
+		if err == nil && networkInfo != "" {
+			output += utils.ColoredString("\nNetwork Details:\n", color.FgYellow)
+			output += networkInfo
+		}
+		
+		output += "\n\nPress 'C' to connect services to this network"
+		output += "\nPress 'D' to disconnect services from this network"
+		
+		return output
+	})
+}
+
 // Keybinding handlers for Lumine projects
 func (gui *Gui) handleLumineProjectCreate(g *gocui.Gui, v *gocui.View) error {
 	projectTypes := []lumine.ProjectType{
@@ -155,7 +198,7 @@ func (gui *Gui) handleLumineProjectCreate(g *gocui.Gui, v *gocui.View) error {
 					
 					return gui.WithWaitingStatus("Creating project...", func() error {
 						config := gui.Orchestrator.ConfigManager.Get()
-						if err := gui.Orchestrator.CreateProject(projectName, projectType, config.DefaultPHPVersion, config.DefaultNodeVersion); err != nil {
+						if err := gui.Orchestrator.CreateProjectWithNetwork(projectName, projectType, config.DefaultPHPVersion, config.DefaultNodeVersion); err != nil {
 							return gui.createErrorPanel(err.Error())
 						}
 						return gui.refreshLumineProjects()
@@ -177,9 +220,9 @@ func (gui *Gui) handleLumineProjectDelete(g *gocui.Gui, v *gocui.View) error {
 		return nil
 	}
 	
-	return gui.createConfirmationPanel("Confirm", fmt.Sprintf("Delete project '%s'? This will remove all files.", project.Name), func(g *gocui.Gui, v *gocui.View) error {
+	return gui.createConfirmationPanel("Confirm", fmt.Sprintf("Delete project '%s'? This will remove all files and network.", project.Name), func(g *gocui.Gui, v *gocui.View) error {
 		return gui.WithWaitingStatus("Deleting project...", func() error {
-			if err := gui.Orchestrator.DeleteProject(project.Name); err != nil {
+			if err := gui.Orchestrator.DeleteProjectWithNetwork(project.Name); err != nil {
 				return gui.createErrorPanel(err.Error())
 			}
 			return gui.refreshLumineProjects()
@@ -329,6 +372,123 @@ func (gui *Gui) handleLumineProjectEdit(g *gocui.Gui, v *gocui.View) error {
 
 	return gui.Menu(CreateMenuOptions{
 		Title: fmt.Sprintf("Edit %s Settings", project.Name),
+		Items: menuItems,
+	})
+}
+
+// Handler for creating project network
+func (gui *Gui) handleLumineProjectCreateNetwork(g *gocui.Gui, v *gocui.View) error {
+	project, err := gui.Panels.LumineProjects.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+	
+	if project.NetworkName != "" {
+		return gui.createErrorPanel("Project already has a network")
+	}
+	
+	return gui.WithWaitingStatus("Creating network...", func() error {
+		network, err := gui.Orchestrator.NetworkManager.CreateProjectNetwork(project.Name)
+		if err != nil {
+			return gui.createErrorPanel(err.Error())
+		}
+		
+		project.NetworkName = network.Name
+		gui.Orchestrator.NotificationMgr.ShowSuccess(fmt.Sprintf("Created network: %s", network.Name))
+		return gui.refreshLumineProjects()
+	})
+}
+
+// Handler for connecting service to project network
+func (gui *Gui) handleLumineProjectConnectService(g *gocui.Gui, v *gocui.View) error {
+	project, err := gui.Panels.LumineProjects.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+	
+	if project.NetworkName == "" {
+		return gui.createErrorPanel("Project has no network. Press 'N' to create one.")
+	}
+	
+	// Get list of running services
+	allServices := gui.Orchestrator.ServiceManager.ListAllServices()
+	runningServices := []*lumine.Service{}
+	for _, svc := range allServices {
+		if svc.Running {
+			runningServices = append(runningServices, svc)
+		}
+	}
+	
+	if len(runningServices) == 0 {
+		return gui.createErrorPanel("No running services to connect")
+	}
+	
+	// Create menu to select service
+	menuItems := make([]*types.MenuItem, len(runningServices))
+	for i, svc := range runningServices {
+		service := svc // capture for closure
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{service.DisplayName, service.Name},
+			OnPress: func() error {
+				return gui.WithWaitingStatus("Connecting service...", func() error {
+					if err := gui.Orchestrator.ConnectServiceToProject(service.Name, project.Name); err != nil {
+						return gui.createErrorPanel(err.Error())
+					}
+					return nil
+				})
+			},
+		}
+	}
+	
+	return gui.Menu(CreateMenuOptions{
+		Title: "Select Service to Connect",
+		Items: menuItems,
+	})
+}
+
+// Handler for disconnecting service from project network
+func (gui *Gui) handleLumineProjectDisconnectService(g *gocui.Gui, v *gocui.View) error {
+	project, err := gui.Panels.LumineProjects.GetSelectedItem()
+	if err != nil {
+		return nil
+	}
+	
+	if project.NetworkName == "" {
+		return gui.createErrorPanel("Project has no network")
+	}
+	
+	// Get list of running services
+	allServices := gui.Orchestrator.ServiceManager.ListAllServices()
+	runningServices := []*lumine.Service{}
+	for _, svc := range allServices {
+		if svc.Running {
+			runningServices = append(runningServices, svc)
+		}
+	}
+	
+	if len(runningServices) == 0 {
+		return gui.createErrorPanel("No running services to disconnect")
+	}
+	
+	// Create menu to select service
+	menuItems := make([]*types.MenuItem, len(runningServices))
+	for i, svc := range runningServices {
+		service := svc // capture for closure
+		menuItems[i] = &types.MenuItem{
+			LabelColumns: []string{service.DisplayName, service.Name},
+			OnPress: func() error {
+				return gui.WithWaitingStatus("Disconnecting service...", func() error {
+					if err := gui.Orchestrator.DisconnectServiceFromProject(service.Name, project.Name); err != nil {
+						return gui.createErrorPanel(err.Error())
+					}
+					return nil
+				})
+			},
+		}
+	}
+	
+	return gui.Menu(CreateMenuOptions{
+		Title: "Select Service to Disconnect",
 		Items: menuItems,
 	})
 }

@@ -248,13 +248,13 @@ func (gui *Gui) getInformationContent() string {
 		return informationStr
 	}
 
-	attrs := []color.Attribute{color.FgMagenta}
+	attrs := []color.Attribute{color.FgCyan, color.Bold}
 	if !hideUnderScores() {
 		attrs = append(attrs, color.Underline)
 	}
 
-	donate := color.New(attrs...).Sprint(gui.Tr.Donate)
-	return donate + " " + informationStr
+	appName := color.New(attrs...).Sprint("Lumine")
+	return appName + " " + informationStr
 }
 
 func (gui *Gui) popupViewNames() []string {

@@ -419,16 +419,22 @@ func (gui *Gui) escape() error {
 	return nil
 }
 
-func (gui *Gui) handleDonate(g *gocui.Gui, v *gocui.View) error {
+func (gui *Gui) handleAppInfo(g *gocui.Gui, v *gocui.View) error {
 	if !gui.g.Mouse {
 		return nil
 	}
 
 	cx, _ := v.Cursor()
-	if cx > len(gui.Tr.Donate) {
+	if cx > len("Lumine") {
 		return nil
 	}
-	return gui.OSCommand.OpenLink("https://github.com/sponsors/jesseduffield")
+	
+	// Show app info or open project page
+	return gui.createConfirmationPanel("Lumine - Local Development Environment Manager", 
+		"A Docker-based development environment manager\nVersion: "+gui.Config.Version, 
+		func(g *gocui.Gui, v *gocui.View) error {
+			return nil
+		}, nil)
 }
 
 func (gui *Gui) editFile(filename string) error {

@@ -470,6 +470,9 @@ func (gui *Gui) renderLumineProjectsOptions() error {
 		"e":   "Expose",
 		"o":   "Open Browser",
 		"t":   "Terminal",
+		"N":   "Create Network",
+		"C":   "Connect Service",
+		"D":   "Disconnect",
 		"[ ]": "Switch Tab",
 	})
 }

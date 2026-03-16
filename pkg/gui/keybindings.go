@@ -472,6 +472,27 @@ func (gui *Gui) GetInitialKeybindings() []*Binding {
 			Handler:     gui.handleLumineProjectTerminal,
 			Description: "Open Terminal",
 		},
+		{
+			ViewName:    "lumineProjects",
+			Key:         'N',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineProjectCreateNetwork,
+			Description: "Create Network",
+		},
+		{
+			ViewName:    "lumineProjects",
+			Key:         'C',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineProjectConnectService,
+			Description: "Connect Service",
+		},
+		{
+			ViewName:    "lumineProjects",
+			Key:         'D',
+			Modifier:    gocui.ModNone,
+			Handler:     gui.handleLumineProjectDisconnectService,
+			Description: "Disconnect Service",
+		},
 	}
 
 	// Lumine Databases panel bindings
@@ -632,6 +653,11 @@ func (gui *Gui) keybindings(g *gocui.Gui) error {
 	}
 
 	if err := g.SetTabClickBinding("main", gui.onMainTabClick); err != nil {
+		return err
+	}
+
+	// Add click handler for information view (app name)
+	if err := g.SetKeybinding("information", gocui.MouseLeft, gocui.ModNone, gui.handleAppInfo); err != nil {
 		return err
 	}
 
