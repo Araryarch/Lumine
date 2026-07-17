@@ -71,16 +71,6 @@ XAMPP bundles everything into one heavy package — Apache, MySQL, PHP, all figh
 
 ## Quick Start
 
-### Download
-
-Grab the latest build from [Releases](https://github.com/Araryarch/Lumine/releases):
-
-| Platform | Format |
-|---|---|
-| Windows | `.exe` installer |
-| macOS | `.dmg` |
-| Linux | `.deb` |
-
 **Requires [Docker](https://docs.docker.com/get-docker/) installed and running.**
 
 ### Build from Source
